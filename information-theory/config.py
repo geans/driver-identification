@@ -6,7 +6,7 @@ path_dataset = '/home/gean/workspace/ThisCarIsMine/'
 debug_on_screen = False
 
 # Sample size for each driver (amount): -1 to all
-sample_size = 30
+sample_size = -1
 # sample_size = 9700
 
 # Size for time series to apply Entropy-Complexity measure (amount)

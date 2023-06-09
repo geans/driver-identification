@@ -144,7 +144,11 @@ def normalization(df):
     return new_df
 
 def remove_invariants(df):
-    return df.loc[:, (df != df.iloc[0]).any()]
+    new_df = df.drop([TARGET, DRIVER], axis=1)
+    new_df.loc[:, (new_df != new_df.iloc[0]).any()]
+    new_df[TARGET] = list(df[TARGET])
+    new_df[DRIVER] = list(df[DRIVER])
+    return new_df
 
 def window(df, size):
     new_df = df.rolling(size, center=True, min_periods=1).mean()
@@ -154,11 +158,20 @@ def window(df, size):
 
 def dataprocessing(df_list, WINDOW=33):
     df = pd.concat(df_list)
+    mdebug('[!] describe:' , df[[DRIVER, TARGET]])
     df = normalization(df)
+    mdebug('[!] normalized:', df[[DRIVER, TARGET]].shape)
+    mdebug('[!] describe:' , df[[DRIVER, TARGET]])
     df = remove_correlation(df)
+    mdebug('[!] correçation:', df[[DRIVER, TARGET]].shape)
+    mdebug('[!] describe:' , df[[DRIVER, TARGET]])
     df = remove_invariants(df)
-    df = window(df, WINDOW)
+    mdebug('[!] invariant:', df[[DRIVER, TARGET]].shape)
+    # df = window(df, WINDOW)
+    # mdebug('[!] window:', df[[DRIVER, TARGET]].shape)
+    mdebug('[!] describe:' , df[[DRIVER, TARGET]])
     df = remove_miss_value(df)
+    mdebug('[!] miss:', df[[DRIVER, TARGET]].shape)
     return df
 
 
@@ -174,49 +187,7 @@ def get_sublists(original_list, delta):
         pivot += shift
     return sublists
 
-# def get_HC(df, driver='A', dx=3, dy=1, taux=1, tauy=1, both=False):
-#     y_label = []
-#     X = []
-#     for t_serie, label in zip(df, ['Driver A', 'Driver B', 'Driver C', 'Driver D']):
-#         sublists = get_sublists(t_serie, HC_SIZE)
-#         for serie in sublists:
-#             row = []
-#             for f in serie.drop([TARGET, DRIVER], axis=1).columns:
-#                 h, c = ordpy.complexity_entropy(serie[f], dx=dx, dy=dy, taux=taux, tauy=tauy)
-#                 row.append(h)
-#                 row.append(c)
-#                 if both:
-#                     # row.append(serie[f].head(1))
-#                     row.append(serie[f].mean())
-#             X.append(row)
-#             if   label == 'Driver A': y_label.append(int(driver=='A'))
-#             elif label == 'Driver B': y_label.append(int(driver=='B'))
-#             elif label == 'Driver C': y_label.append(int(driver=='C'))
-#             elif label == 'Driver D': y_label.append(int(driver=='D'))
-#     return X, y_label
-
-# def get_HC(df, driver='A', dx=3, dy=1, taux=1, tauy=1, both=False):
-#     y_label = []
-#     X = []
-#     for t_serie, label in zip(df, ['Driver A', 'Driver B', 'Driver C', 'Driver D']):
-#         sublists = get_sublists(t_serie, HC_SIZE)
-#         for serie in sublists:
-#             row = []
-#             for f in serie.drop([TARGET, DRIVER], axis=1).columns:
-#                 h, c = ordpy.complexity_entropy(serie[f], dx=dx, dy=dy, taux=taux, tauy=tauy)
-#                 row.append(h)
-#                 row.append(c)
-#                 if both:
-#                     # row.append(serie[f].head(1))
-#                     row.append(serie[f].mean())
-#             X.append(row)
-#             if   label == 'Driver A': y_label.append(int(driver=='A'))
-#             elif label == 'Driver B': y_label.append(int(driver=='B'))
-#             elif label == 'Driver C': y_label.append(int(driver=='C'))
-#             elif label == 'Driver D': y_label.append(int(driver=='D'))
-#     return X, y_label
-
-def get_HC(df_list, driver='A', dx=3, dy=1, taux=1, tauy=1, both=False):
+def get_information(df_list, driver='A', dx=3, dy=1, taux=1, tauy=1, both=False):
     y_label = []
     X = []
     new_df_list = []
@@ -225,22 +196,31 @@ def get_HC(df_list, driver='A', dx=3, dy=1, taux=1, tauy=1, both=False):
         new_df = None
         for window_df in sliding_window_df:
             row = {}
-            for f in window_df.drop([TARGET, DRIVER], axis=1).columns:
-                h, c = ordpy.complexity_entropy(window_df[f], dx=dx, dy=dy, taux=taux, tauy=tauy)
-                row[f'{f}_entropy'] = h
-                row[f'{f}_complexity'] = c
+            for feature in window_df.drop([TARGET, DRIVER], axis=1).columns:
+                h, c = ordpy.complexity_entropy(window_df[feature], dx=dx, dy=dy, taux=taux, tauy=tauy)
+                f, s = ordpy.fisher_shannon(window_df[feature], dx=4)
+                row[f'{feature}_entropy'] = h
+                row[f'{feature}_complexity'] = c
+                row[f'{feature}_fisher'] = f
+                row[f'{feature}_shannon'] = s
                 if both:
                     if window_df[f].dtypes == int:
                         row[f] = int(window_df[f].head(1))
                     else:
                         row[f] = float(window_df[f].head(1))
             row[TARGET] = int(driver==label)
+            row[DRIVER] = driver
             # print('Row:', row)
             if new_df is None:
                 new_df = pd.DataFrame([row])
             else:
                 new_df.loc[len(new_df)] = row
+        # new_df[TARGET] = df[TARGET]
+        # new_df[DRIVER] = df[DRIVER]
         new_df_list.append(new_df)
+
+    mdebug('[!] get information entry:' , pd.concat(df_list)[[DRIVER, TARGET]])
+    mdebug('[!] get information out:  ' , pd.concat(new_df_list)[[DRIVER, TARGET]])
     return new_df_list
 
 
@@ -264,7 +244,7 @@ def best_parameter(df):
                     score_inf_teory = []
                     try:
                         for driver_target in ['A', 'B', 'C', 'D']:
-                            X, y = get_HC(
+                            X, y = get_information(
                                 df,
                                 driver=driver_target,
                                 dx=dx,
@@ -318,46 +298,6 @@ def classifiers_train_test(X, y, _score_dic, _time_dic, num_repetitions):
     ''')
     return score_dic, time_dic
 
-# def classifier_handle(name, clf, X_train, X_test, y_train, y_test):
-#     print('Init classifier:', name)
-#     t0 = time.time()
-#     clf.fit(X_train, y_train)
-#     time_fit = time.time() - t0
-#     score = clf.score(X_test, y_test)
-#     score_dic[name] = score_dic.get(name, []) + [score]
-#     time_dic[name] = time_dic.get(name, []) + [time_fit]
-#     print('End classifier:', name)
-    # return {name: score}, {name: time_fit}
-
-# import concurrent.futures
-# def classifiers_train_test(X, y, _score_dic, _time_dic, num_repetitions):
-#     executor = concurrent.futures.ThreadPoolExecutor()
-#     running_process = []
-#     s_dict={}
-#     t_dict={}
-#     for _ in range(num_repetitions):
-#         X_train, X_test, y_train, y_test = train_test_split(X, y)
-#         for name, clf in zip(classifier_names, classifiers):
-#             p = executor.submit(classifier_handle, name, clf,
-#                                 X_train, X_test, y_train, y_test)
-#             running_process.append(p)
-#         for p in running_process:
-#             try:
-#                 s,t = p.result()
-#                 s_dict |= s
-#                 t_dict |= t
-#                 # s_dict.copy(s)
-#                 # t_dict.copy(t)
-#             except Exception as e:
-#                 mdebug(f'[error] Error to get result from process.', e)
-#     mdebug(f'''
-#     [partial data]
-#         score_dic = {s_dict}
-#         time_dic  = {t_dict}
-#     [end partial data]
-#     ''')
-#     return s_dict, t_dict
-
 
 if __name__ == '__main__':
     time_literature = {}
@@ -391,7 +331,11 @@ dx,dy,tx,ty = {dx,dy,tx,ty}
 
         t0 = time.time()
         df_pp = dataprocessing(df_raw)
+        df_pp = window(df_pp, 33)
         time_dataprocessing.append(time.time() - t0)
+        mdebug('[!] window:', df_pp.shape)
+        mdebug('[!][!] describe:' , df_pp[[DRIVER, TARGET]].describe())
+        mdebug('[!][!] describe:' , df_pp[[DRIVER, TARGET]])
 
         X, y = df_pp.drop([TARGET, DRIVER], axis=1), df_pp[TARGET]
         mdebug(f"Literature.", df_pp.drop([TARGET, DRIVER], axis=1).shape[1],
@@ -404,7 +348,7 @@ dx,dy,tx,ty = {dx,dy,tx,ty}
         # Entropy-Complexty (HC)
 
         t0 = time.time()
-        df_hc = get_HC(
+        df_hc = get_information(
             df_raw,
             driver=driver_target,
             dx=dx,
@@ -415,7 +359,8 @@ dx,dy,tx,ty = {dx,dy,tx,ty}
         time_hc_calculate.append(time.time() - t0)
         mdebug(f"Information-Teory.")
 
-        X, y = df_hc.drop([TARGET, DRIVER], axis=1), df_hc[TARGET]
+        df_joined = pd.concat(df_hc)
+        X, y = df_joined.drop([TARGET, DRIVER], axis=1), df_joined[TARGET]
         score_inf_teory, time_inf_teory = classifiers_train_test(X, y, score_inf_teory, 
                                                                     time_inf_teory, 
                                                                     NUM_REPETITIONS)
@@ -425,12 +370,12 @@ dx,dy,tx,ty = {dx,dy,tx,ty}
 
         mdebug(f"Both.")
         df_both = dataprocessing(df_hc)
-        time_dataprocessing.append(time.time() - t0)
 
-        X, y = df_both.drop([TARGET, DRIVER], axis=1), df_both[TARGET]
-        mdebug(f"Literature.", df_both.drop([TARGET, DRIVER], axis=1).shape[1],
+        df_joined = df_both
+        X, y = df_joined.drop([TARGET, DRIVER], axis=1), df_joined[TARGET]
+        mdebug(f"Literature.", df_joined.drop([TARGET, DRIVER], axis=1).shape[1],
                 f'Features after pre-processing:',
-                list(df_both.drop([TARGET, DRIVER], axis=1).columns))
+                list(df_joined.drop([TARGET, DRIVER], axis=1).columns))
         score_both, time_both = classifiers_train_test(X, y, score_both, 
                                                         time_both,
                                                         NUM_REPETITIONS)
@@ -452,8 +397,8 @@ dx,dy,tx,ty = {dx,dy,tx,ty}
     y_both_trainingtime           = []
     y_both_std_error_trainingtime = []
 
-    time_dataprocessing = []
-    time_hc_calculate   = []
+    # time_dataprocessing = []
+    # time_hc_calculate   = []
 
     y_lt_totaltime             = []
     y_lt_std_error_totaltime   = []
@@ -464,18 +409,6 @@ dx,dy,tx,ty = {dx,dy,tx,ty}
 
 
     mdebug('\nChart')
-
-    # fig, ax = plt.subplots(1, 1, figsize=(15,9))
-    # ax_width = 0.3
-    
-    # y_lt = []
-    # y_lt_std_error = []
-    
-    # y_inf = []
-    # y_inf_std_error = []
-    
-    # y_both = []
-    # y_both_std_error = []
     
     for key in classifier_names:
         y_lt_accuracy.append(mean(score_literature[key]))
@@ -505,49 +438,6 @@ dx,dy,tx,ty = {dx,dy,tx,ty}
 
 [end data]
         ''')
-    # bars_literature = ax.bar(X_axis - ax_width, y_lt, ax_width,
-    #                     label='Literature', 
-    #                     yerr=y_lt_std_error, color='deepskyblue')
-    # bars_inf_teory  = ax.bar(X_axis, y_inf, ax_width,
-    #                     label='Complexity-Entropy', 
-    #                     yerr=y_inf_std_error, color='orange')
-    # bars_both       = ax.bar(X_axis + ax_width, y_both, ax_width,
-    #                     label='Literature + Complexity-Entropy', 
-    #                     yerr=y_both_std_error, color='lime')
-    # ax.set_xticks(X_axis, classifier_names)
-    # ax.set_xlabel("Classifier")
-    # ax.set_ylabel("Accuracy")
-    # ax.set_ylim([0.5, 1.05])
-    # ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.05),
-    #       fancybox=True, shadow=True, ncol=3)
-    # def autolabel(rects):
-    #     """
-    #     Attach a text label above each bar displaying its height
-    #     """
-    #     for rect in rects:
-    #         height = rect.get_height()
-    #         ax.text(rect.get_x() + rect.get_width()/2., .5,
-    #                 f'{height:3.2}',
-    #                 ha='center', va='bottom')
-    # autolabel(bars_literature)
-    # autolabel(bars_inf_teory)
-    # autolabel(bars_both)
-
-    # plt.show()
-    # exit()
-
-    # chart of train time
-
-    # fig, ax = plt.subplots(1, 1, figsize=(15,9))
-    
-    # y_lt = []
-    # y_lt_std_error = []
-    
-    # y_inf = []
-    # y_inf_std_error = []
-
-    # y_both = []
-    # y_both_std_error = []
     
     mdebug('Output training times (ms):')
     for key in classifier_names:
@@ -575,32 +465,11 @@ dx,dy,tx,ty = {dx,dy,tx,ty}
   y_lt_std_error_trainingtime = {y_lt_std_error_trainingtime}
   y_inf_trainingtime = {y_inf_trainingtime}
   y_inf_std_error_trainingtime = {y_inf_std_error_trainingtime}
-  y_both = {y_both}
+  y_both = {y_both_trainingtime}
   y_both_std_error_trainingtime = {y_both_std_error_trainingtime}
 
 [end data]
         ''')
-    # X_axis = np.arange(len(classifier_names))
-    # bars_literature = ax.bar(X_axis - ax_width, y_lt, ax_width,
-    #                     label = 'Literature',
-    #                     yerr=y_lt_std_error, color='deepskyblue')
-    # bars_inf_teory  = ax.bar(X_axis, y_inf, ax_width,
-    #                     label = 'Complexity-Entropy',
-    #                     yerr=y_inf_std_error, color='orange')
-    # bars_both       = ax.bar(X_axis + ax_width, y_both, ax_width,
-    #                     label='Literature + Complexity-Entropy', 
-    #                     yerr=y_both_std_error, color='lime')
-    # ax.set_xticks(X_axis, classifier_names)
-    # ax.set_xlabel("Classifier")
-    # ax.set_ylabel("Training time (ms)")
-    # ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.05),
-    #       fancybox=True, shadow=True, ncol=3)
-    # autolabel(bars_literature)
-    # autolabel(bars_inf_teory)
-    # autolabel(bars_both)
-
-
-    # chart of time to processing data
 
     mdebug(f'''
 [data]  Classifier's Data handle time (ms):
@@ -610,35 +479,6 @@ dx,dy,tx,ty = {dx,dy,tx,ty}
 
 [end data]
         ''')
-    # fig, ax = plt.subplots(1, 1)
-    # X_axis = np.arange(1)
-    # bars_literature = ax.bar(X_axis - ax_width, [mean(time_dataprocessing) * 1000],
-    #                     ax_width * 2, yerr=[sem(time_dataprocessing) * 1000],
-    #                     label = 'Literature', color='deepskyblue')
-    # bars_inf_teory  = ax.bar(X_axis + ax_width, [mean(time_hc_calculate) * 1000],
-    #                     ax_width * 2, yerr=[sem(time_hc_calculate) * 1000],
-    #                     label = 'Complexity-Entropy', color='orange')
-    # ax.set_xticks(X_axis, ['Data processing technique'])
-    # ax.set_ylabel("Data handle time (ms)")
-    # ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.05),
-    #       fancybox=True, shadow=True, ncol=3)
-    # autolabel(bars_literature)
-    # autolabel(bars_inf_teory)
-
-
-
-    # chart of train time + process time
-
-    # fig, ax = plt.subplots(1, 1, figsize=(15,9))
-    
-    # y_lt = []
-    # y_lt_std_error = []
-    
-    # y_inf = []
-    # y_inf_std_error = []
-
-    # y_both = []
-    # y_both_std_error = []
     
     mdebug('Output total times (ms):')
     mean_time_dataprocessing = mean(time_dataprocessing)
@@ -673,30 +513,6 @@ dx,dy,tx,ty = {dx,dy,tx,ty}
 
 [end data]
         ''')
-    # X_axis = np.arange(len(classifier_names))
-    # bars_literature = ax.bar(X_axis - ax_width, y_lt, ax_width,
-    #                     label = 'Literature',
-    #                     yerr=y_lt_std_error, color='deepskyblue')
-    # bars_inf_teory  = ax.bar(X_axis, y_inf, ax_width,
-    #                     label = 'Complexity-Entropy',
-    #                     yerr=y_inf_std_error, color='orange')
-    # bars_both       = ax.bar(X_axis + ax_width, y_both, ax_width,
-    #                     label='Literature + Complexity-Entropy', 
-    #                     yerr=y_both_std_error, color='lime')
-    # ax.set_xticks(X_axis, classifier_names)
-    # ax.set_xlabel("Classifier")
-    # ax.set_ylabel("Total time (ms)")
-    # ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.05),
-    #       fancybox=True, shadow=True, ncol=3)
-    # autolabel(bars_literature)
-    # autolabel(bars_inf_teory)
-    # autolabel(bars_both)
-
-
-
-    # plt char on screen
-
-    # plt.show()
 
 pltr = PlotResults(classifier_names, SAMPLE_SIZE)
 pltr.plot_accuracy(y_lt_accuracy, y_lt_std_error_accuracy,
