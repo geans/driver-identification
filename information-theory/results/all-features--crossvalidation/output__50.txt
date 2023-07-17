@@ -1,0 +1,474 @@
+
+Sample size: 50
+HC size: 30
+Number of repetitions: 1
+dx,dy,tx,ty = (3, 1, 1, 1)
+ 
+Dataset size shape: (200, 53) 
+
+Driver A 
+ 
+Literature. 34 Features after pre-processing: ['fuel_usage', 'accelerator_position', 'throttle_position', 'accelerator_position_filtered', 'throttle_position_abs', 'engine_pressure_maintanance_time', 'block_fuel', 'fuel_pressure', 'engine_speed', 'flywheel_torque_revised', 'current_fire_timing', 'cooling_temperature', 'engine_idle_slippage', 'engine_torque', 'calculation_overhead', 'engine_torque_min', 'flywheel_torque', 'engine_velocity_increase_tcu', 'target_engine_velocity_lockup', 'glow_plug_limit_request', 'current_gear', 'mission_oil_temp', 'wheel_velo_backleft', 'torque_converter_turbin_speed', 'clutch_check', 'converter_clutch', 'gear_choice', 'car_speed', 'brake_switch', 'brake_sylinder', 'road_slope', 'latitude_acceleration', 'steering_wheel_acceleration', 'steering_wheel_angle'] 
+
+    [partial data]
+        score_dic = {'Linear SVM': [0.9949999999999999], 'RBF SVM': [0.945], 'D. Tree': [0.985], 'N. Bayes': [0.8800000000000001], 'R. Forest': [0.9650000000000001], 'kNN': [0.95], 'MLP': [0.9650000000000001]}
+        time_dic  = {'Linear SVM': [0.004273700714111328], 'RBF SVM': [0.005757856369018555], 'D. Tree': [0.0032279491424560547], 'N. Bayes': [0.017218399047851562], 'R. Forest': [0.038188934326171875], 'kNN': [0.07864179611206054], 'MLP': [0.10540328025817872]}
+    [end partial data]
+     
+[!] get information entry:     driver  label
+0        A      1
+1        A      1
+2        A      1
+3        A      1
+4        A      1
+..     ...    ...
+195      D      0
+196      D      0
+197      D      0
+198      D      0
+199      D      0
+
+[200 rows x 2 columns] 
+[!] get information out:      driver  label
+0       A      1
+1       A      1
+2       A      1
+3       A      1
+4       A      1
+..    ...    ...
+16      D      0
+17      D      0
+18      D      0
+19      D      0
+20      D      0
+
+[84 rows x 2 columns] 
+Information-Teory. 
+
+    [partial data]
+        score_dic = {'RBF SVM': [1.0], 'Linear SVM': [1.0], 'D. Tree': [0.9625], 'N. Bayes': [1.0], 'R. Forest': [1.0], 'kNN': [1.0], 'MLP': [1.0]}
+        time_dic  = {'RBF SVM': [0.005942869186401367], 'Linear SVM': [0.0075759410858154295], 'D. Tree': [0.005016946792602539], 'N. Bayes': [0.008535146713256836], 'R. Forest': [0.04225740432739258], 'kNN': [0.074043607711792], 'MLP': [0.08784842491149902]}
+    [end partial data]
+     
+Both. 
+[!] get information entry:      driver  label
+1027      A      1
+1028      A      1
+1029      A      1
+1030      A      1
+1031      A      1
+...     ...    ...
+2081      D      0
+2082      D      0
+2083      D      0
+2084      D      0
+2085      D      0
+
+[200 rows x 2 columns] 
+[!] get information out:      driver  label
+0       A      1
+1       A      1
+2       A      1
+3       A      1
+4       A      1
+..    ...    ...
+16      D      0
+17      D      0
+18      D      0
+19      D      0
+20      D      0
+
+[84 rows x 2 columns] 
+Literature. 119 Features after pre-processing: ['fuel_usage_complexity', 'accelerator_position_complexity', 'accelerator_position_shannon', 'throttle_position_complexity', 'throttle_position_fisher', 'throttle_position_shannon', 'short_fuel_bank_complexity', 'short_fuel_bank_shannon', 'inhale_pressure_complexity', 'accelerator_position_filtered_entropy', 'accelerator_position_filtered_complexity', 'accelerator_position_filtered_fisher', 'accelerator_position_filtered_shannon', 'throttle_position_abs_complexity', 'engine_pressure_maintanance_time_entropy', 'engine_pressure_maintanance_time_complexity', 'engine_pressure_maintanance_time_fisher', 'engine_pressure_maintanance_time_shannon', 'block_fuel_fisher', 'block_fuel_shannon', 'fuel_pressure_entropy', 'fuel_pressure_complexity', 'fuel_pressure_fisher', 'fuel_pressure_shannon', 'long_fuel_bank_fisher', 'long_fuel_bank_shannon', 'engine_speed_complexity', 'engine_speed_fisher', 'engine_speed_shannon', 'friction_torque_complexity', 'friction_torque_shannon', 'flywheel_torque_revised_entropy', 'flywheel_torque_revised_complexity', 'flywheel_torque_revised_fisher', 'flywheel_torque_revised_shannon', 'current_fire_timing_entropy', 'current_fire_timing_complexity', 'current_fire_timing_fisher', 'current_fire_timing_shannon', 'cooling_temperature_fisher', 'cooling_temperature_shannon', 'engine_torque_complexity', 'calculation_overhead_complexity', 'calculation_overhead_fisher', 'calculation_overhead_shannon', 'engine_torque_min_complexity', 'engine_torque_max_complexity', 'flywheel_torque_entropy', 'flywheel_torque_complexity', 'flywheel_torque_fisher', 'flywheel_torque_shannon', 'torque_transform_coeff_entropy', 'torque_transform_coeff_complexity', 'torque_transform_coeff_fisher', 'torque_transform_coeff_shannon', 'standard_torque_ratio_entropy', 'standard_torque_ratio_complexity', 'standard_torque_ratio_fisher', 'standard_torque_ratio_shannon', 'fire_angle_delay_tcu_fisher', 'fire_angle_delay_tcu_shannon', 'engine_torque_limit_tcu_fisher', 'engine_torque_limit_tcu_shannon', 'target_engine_velocity_lockup_entropy', 'target_engine_velocity_lockup_complexity', 'target_engine_velocity_lockup_fisher', 'target_engine_velocity_lockup_shannon', 'glow_plug_limit_request_entropy', 'glow_plug_limit_request_complexity', 'glow_plug_limit_request_fisher', 'glow_plug_limit_request_shannon', 'compressor_activation_entropy', 'compressor_activation_complexity', 'compressor_activation_fisher', 'compressor_activation_shannon', 'current_gear_fisher', 'current_gear_shannon', 'mission_oil_temp_fisher', 'mission_oil_temp_shannon', 'wheel_velo_backleft_complexity', 'torque_converter_turbin_speed_complexity', 'torque_converter_turbin_speed_shannon', 'clutch_check_entropy', 'clutch_check_complexity', 'clutch_check_fisher', 'clutch_check_shannon', 'converter_clutch_fisher', 'converter_clutch_shannon', 'gear_choice_entropy', 'gear_choice_complexity', 'gear_choice_fisher', 'gear_choice_shannon', 'car_speed_complexity', 'car_speed_fisher', 'car_speed_shannon', 'logitude_acceleration_entropy', 'logitude_acceleration_complexity', 'logitude_acceleration_fisher', 'logitude_acceleration_shannon', 'brake_switch_complexity', 'brake_switch_fisher', 'brake_switch_shannon', 'brake_sylinder_entropy', 'brake_sylinder_complexity', 'brake_sylinder_fisher', 'brake_sylinder_shannon', 'road_slope_complexity', 'road_slope_fisher', 'road_slope_shannon', 'latitude_acceleration_entropy', 'latitude_acceleration_complexity', 'latitude_acceleration_fisher', 'latitude_acceleration_shannon', 'steering_wheel_acceleration_complexity', 'steering_wheel_acceleration_fisher', 'steering_wheel_acceleration_shannon', 'steering_wheel_angle_complexity', 'steering_wheel_angle_fisher', 'steering_wheel_angle_shannon'] 
+
+    [partial data]
+        score_dic = {'Linear SVM': [0.9875], 'RBF SVM': [1.0], 'D. Tree': [1.0], 'N. Bayes': [1.0], 'kNN': [0.9625], 'R. Forest': [1.0], 'MLP': [1.0]}
+        time_dic  = {'Linear SVM': [0.006017255783081055], 'RBF SVM': [0.005374908447265625], 'D. Tree': [0.009079599380493164], 'N. Bayes': [0.01541604995727539], 'kNN': [0.053714418411254884], 'R. Forest': [0.03138155937194824], 'MLP': [0.054346656799316405]}
+    [end partial data]
+     
+Dataset size shape: (200, 53) 
+
+Driver B 
+ 
+Literature. 34 Features after pre-processing: ['short_fuel_bank', 'accelerator_position_filtered', 'throttle_position_abs', 'reduce_block_fuel', 'block_fuel', 'fuel_pressure', 'long_fuel_bank', 'friction_torque', 'flywheel_torque_revised', 'current_fire_timing', 'cooling_temperature', 'calculation_overhead', 'engine_torque_min', 'flywheel_torque', 'torque_transform_coeff', 'standard_torque_ratio', 'fire_angle_delay_tcu', 'engine_torque_limit_tcu', 'engine_velocity_increase_tcu', 'target_engine_velocity_lockup', 'glow_plug_limit_request', 'compressor_activation', 'mission_oil_temp', 'torque_converter_turbin_speed', 'clutch_check', 'converter_clutch', 'gear_choice', 'car_speed', 'brake_switch', 'brake_sylinder', 'road_slope', 'latitude_acceleration', 'steering_wheel_acceleration', 'steering_wheel_angle'] 
+
+    [partial data]
+        score_dic = {'Linear SVM': [0.9949999999999999, 0.75], 'RBF SVM': [0.945, 0.86], 'D. Tree': [0.985, 0.93], 'N. Bayes': [0.8800000000000001, 0.795], 'R. Forest': [0.9650000000000001, 0.925], 'kNN': [0.95, 0.8550000000000001], 'MLP': [0.9650000000000001, 0.8]}
+        time_dic  = {'Linear SVM': [0.004273700714111328, 0.005063390731811524], 'RBF SVM': [0.005757856369018555, 0.004050350189208985], 'D. Tree': [0.0032279491424560547, 0.003185892105102539], 'N. Bayes': [0.017218399047851562, 0.008614015579223634], 'R. Forest': [0.038188934326171875, 0.0467780590057373], 'kNN': [0.07864179611206054, 0.11519021987915039], 'MLP': [0.10540328025817872, 0.19313669204711914]}
+    [end partial data]
+     
+[!] get information entry:     driver  label
+0        A      0
+1        A      0
+2        A      0
+3        A      0
+4        A      0
+..     ...    ...
+195      D      0
+196      D      0
+197      D      0
+198      D      0
+199      D      0
+
+[200 rows x 2 columns] 
+[!] get information out:      driver  label
+0       A      0
+1       A      0
+2       A      0
+3       A      0
+4       A      0
+..    ...    ...
+16      D      0
+17      D      0
+18      D      0
+19      D      0
+20      D      0
+
+[84 rows x 2 columns] 
+Information-Teory. 
+
+    [partial data]
+        score_dic = {'RBF SVM': [1.0, 1.0], 'Linear SVM': [1.0, 0.75], 'D. Tree': [0.9625, 0.95], 'N. Bayes': [1.0, 1.0], 'R. Forest': [1.0, 1.0], 'kNN': [1.0, 0.9294117647058823], 'MLP': [1.0, 1.0]}
+        time_dic  = {'RBF SVM': [0.005942869186401367, 0.006786155700683594], 'Linear SVM': [0.0075759410858154295, 0.007002687454223633], 'D. Tree': [0.005016946792602539, 0.010770940780639648], 'N. Bayes': [0.008535146713256836, 0.015025472640991211], 'R. Forest': [0.04225740432739258, 0.04083261489868164], 'kNN': [0.074043607711792, 0.08047928810119628], 'MLP': [0.08784842491149902, 0.10997304916381836]}
+    [end partial data]
+     
+Both. 
+[!] get information entry:      driver  label
+1337      A      0
+1338      A      0
+1339      A      0
+1340      A      0
+1341      A      0
+...     ...    ...
+920       D      0
+921       D      0
+922       D      0
+923       D      0
+924       D      0
+
+[200 rows x 2 columns] 
+[!] get information out:      driver  label
+0       A      0
+1       A      0
+2       A      0
+3       A      0
+4       A      0
+..    ...    ...
+16      D      0
+17      D      0
+18      D      0
+19      D      0
+20      D      0
+
+[84 rows x 2 columns] 
+Literature. 130 Features after pre-processing: ['fuel_usage_complexity', 'fuel_usage_fisher', 'fuel_usage_shannon', 'short_fuel_bank_entropy', 'short_fuel_bank_complexity', 'short_fuel_bank_fisher', 'short_fuel_bank_shannon', 'inhale_pressure_complexity', 'inhale_pressure_fisher', 'inhale_pressure_shannon', 'accelerator_position_filtered_entropy', 'accelerator_position_filtered_complexity', 'accelerator_position_filtered_fisher', 'accelerator_position_filtered_shannon', 'throttle_position_abs_complexity', 'throttle_position_abs_fisher', 'throttle_position_abs_shannon', 'engine_pressure_maintanance_time_entropy', 'engine_pressure_maintanance_time_complexity', 'engine_pressure_maintanance_time_fisher', 'engine_pressure_maintanance_time_shannon', 'reduce_block_fuel_shannon', 'block_fuel_shannon', 'fuel_pressure_entropy', 'fuel_pressure_complexity', 'fuel_pressure_fisher', 'fuel_pressure_shannon', 'long_fuel_bank_fisher', 'long_fuel_bank_shannon', 'engine_speed_entropy', 'engine_speed_complexity', 'engine_speed_fisher', 'engine_speed_shannon', 'friction_torque_complexity', 'friction_torque_fisher', 'friction_torque_shannon', 'flywheel_torque_revised_entropy', 'flywheel_torque_revised_complexity', 'flywheel_torque_revised_fisher', 'flywheel_torque_revised_shannon', 'current_fire_timing_entropy', 'current_fire_timing_complexity', 'current_fire_timing_fisher', 'current_fire_timing_shannon', 'cooling_temperature_fisher', 'cooling_temperature_shannon', 'engine_idle_slippage_complexity', 'engine_idle_slippage_fisher', 'engine_idle_slippage_shannon', 'engine_torque_complexity', 'engine_torque_fisher', 'engine_torque_shannon', 'calculation_overhead_complexity', 'calculation_overhead_fisher', 'calculation_overhead_shannon', 'engine_torque_min_complexity', 'engine_torque_min_fisher', 'engine_torque_min_shannon', 'engine_torque_max_complexity', 'engine_torque_max_fisher', 'engine_torque_max_shannon', 'flywheel_torque_entropy', 'flywheel_torque_complexity', 'flywheel_torque_fisher', 'flywheel_torque_shannon', 'torque_transform_coeff_entropy', 'torque_transform_coeff_complexity', 'torque_transform_coeff_fisher', 'torque_transform_coeff_shannon', 'standard_torque_ratio_entropy', 'standard_torque_ratio_complexity', 'standard_torque_ratio_fisher', 'standard_torque_ratio_shannon', 'fire_angle_delay_tcu_entropy', 'fire_angle_delay_tcu_complexity', 'fire_angle_delay_tcu_fisher', 'fire_angle_delay_tcu_shannon', 'engine_torque_limit_tcu_fisher', 'engine_torque_limit_tcu_shannon', 'target_engine_velocity_lockup_fisher', 'target_engine_velocity_lockup_shannon', 'glow_plug_limit_request_entropy', 'glow_plug_limit_request_complexity', 'glow_plug_limit_request_fisher', 'glow_plug_limit_request_shannon', 'compressor_activation_entropy', 'compressor_activation_complexity', 'compressor_activation_fisher', 'compressor_activation_shannon', 'current_gear_shannon', 'mission_oil_temp_fisher', 'mission_oil_temp_shannon', 'wheel_velo_backleft_shannon', 'torque_converter_turbin_speed_complexity', 'torque_converter_turbin_speed_fisher', 'torque_converter_turbin_speed_shannon', 'clutch_check_entropy', 'clutch_check_complexity', 'clutch_check_fisher', 'clutch_check_shannon', 'converter_clutch_fisher', 'converter_clutch_shannon', 'gear_choice_entropy', 'gear_choice_complexity', 'gear_choice_fisher', 'gear_choice_shannon', 'car_speed_fisher', 'car_speed_shannon', 'logitude_acceleration_entropy', 'logitude_acceleration_complexity', 'logitude_acceleration_fisher', 'logitude_acceleration_shannon', 'brake_switch_fisher', 'brake_switch_shannon', 'brake_sylinder_entropy', 'brake_sylinder_complexity', 'brake_sylinder_fisher', 'brake_sylinder_shannon', 'road_slope_fisher', 'road_slope_shannon', 'latitude_acceleration_entropy', 'latitude_acceleration_complexity', 'latitude_acceleration_fisher', 'latitude_acceleration_shannon', 'steering_wheel_acceleration_complexity', 'steering_wheel_acceleration_fisher', 'steering_wheel_acceleration_shannon', 'steering_wheel_angle_complexity', 'steering_wheel_angle_fisher', 'steering_wheel_angle_shannon'] 
+
+    [partial data]
+        score_dic = {'Linear SVM': [0.9875, 1.0], 'RBF SVM': [1.0, 0.9882352941176471], 'D. Tree': [1.0, 0.9058823529411765], 'N. Bayes': [1.0, 1.0], 'kNN': [0.9625, 0.9875], 'R. Forest': [1.0, 1.0], 'MLP': [1.0, 1.0]}
+        time_dic  = {'Linear SVM': [0.006017255783081055, 0.0056683063507080075], 'RBF SVM': [0.005374908447265625, 0.006806516647338867], 'D. Tree': [0.009079599380493164, 0.01017932891845703], 'N. Bayes': [0.01541604995727539, 0.01365833282470703], 'kNN': [0.053714418411254884, 0.05920209884643555], 'R. Forest': [0.03138155937194824, 0.05000467300415039], 'MLP': [0.054346656799316405, 0.09250340461730958]}
+    [end partial data]
+     
+Dataset size shape: (200, 53) 
+
+Driver C 
+ 
+Literature. 37 Features after pre-processing: ['short_fuel_bank', 'accelerator_position_filtered', 'throttle_position_abs', 'engine_pressure_maintanance_time', 'reduce_block_fuel', 'block_fuel', 'fuel_pressure', 'long_fuel_bank', 'friction_torque', 'flywheel_torque_revised', 'current_fire_timing', 'cooling_temperature', 'calculation_overhead', 'engine_torque_min', 'engine_torque_max', 'flywheel_torque', 'torque_transform_coeff', 'standard_torque_ratio', 'fire_angle_delay_tcu', 'engine_torque_limit_tcu', 'engine_velocity_increase_tcu', 'target_engine_velocity_lockup', 'glow_plug_limit_request', 'compressor_activation', 'current_gear', 'mission_oil_temp', 'torque_converter_turbin_speed', 'clutch_check', 'converter_clutch', 'gear_choice', 'car_speed', 'brake_switch', 'brake_sylinder', 'road_slope', 'latitude_acceleration', 'steering_wheel_acceleration', 'steering_wheel_angle'] 
+
+    [partial data]
+        score_dic = {'Linear SVM': [0.9949999999999999, 0.75, 0.75], 'RBF SVM': [0.945, 0.86, 0.89], 'D. Tree': [0.985, 0.93, 0.905], 'N. Bayes': [0.8800000000000001, 0.795, 0.9199999999999999], 'R. Forest': [0.9650000000000001, 0.925, 0.9400000000000001], 'kNN': [0.95, 0.8550000000000001, 0.7949999999999999], 'MLP': [0.9650000000000001, 0.8, 0.8949999999999999]}
+        time_dic  = {'Linear SVM': [0.004273700714111328, 0.005063390731811524, 0.010014629364013672], 'RBF SVM': [0.005757856369018555, 0.004050350189208985, 0.0049629688262939455], 'D. Tree': [0.0032279491424560547, 0.003185892105102539, 0.004340171813964844], 'N. Bayes': [0.017218399047851562, 0.008614015579223634, 0.0036708831787109373], 'R. Forest': [0.038188934326171875, 0.0467780590057373, 0.014786052703857421], 'kNN': [0.07864179611206054, 0.11519021987915039, 0.10386843681335449], 'MLP': [0.10540328025817872, 0.19313669204711914, 0.17609767913818358]}
+    [end partial data]
+     
+[!] get information entry:     driver  label
+0        A      0
+1        A      0
+2        A      0
+3        A      0
+4        A      0
+..     ...    ...
+195      D      0
+196      D      0
+197      D      0
+198      D      0
+199      D      0
+
+[200 rows x 2 columns] 
+[!] get information out:      driver  label
+0       A      0
+1       A      0
+2       A      0
+3       A      0
+4       A      0
+..    ...    ...
+16      D      0
+17      D      0
+18      D      0
+19      D      0
+20      D      0
+
+[84 rows x 2 columns] 
+Information-Teory. 
+
+    [partial data]
+        score_dic = {'RBF SVM': [1.0, 1.0, 1.0], 'Linear SVM': [1.0, 0.75, 0.9882352941176471], 'D. Tree': [0.9625, 0.95, 1.0], 'N. Bayes': [1.0, 1.0, 1.0], 'R. Forest': [1.0, 1.0, 1.0], 'kNN': [1.0, 0.9294117647058823, 1.0], 'MLP': [1.0, 1.0, 1.0]}
+        time_dic  = {'RBF SVM': [0.005942869186401367, 0.006786155700683594, 0.005829620361328125], 'Linear SVM': [0.0075759410858154295, 0.007002687454223633, 0.009828615188598632], 'D. Tree': [0.005016946792602539, 0.010770940780639648, 0.012162494659423827], 'N. Bayes': [0.008535146713256836, 0.015025472640991211, 0.008685636520385741], 'R. Forest': [0.04225740432739258, 0.04083261489868164, 0.026431989669799805], 'kNN': [0.074043607711792, 0.08047928810119628, 0.06489629745483398], 'MLP': [0.08784842491149902, 0.10997304916381836, 0.10209889411926269]}
+    [end partial data]
+     
+Both. 
+[!] get information entry:     driver  label
+582      A      0
+583      A      0
+584      A      0
+585      A      0
+586      A      0
+..     ...    ...
+403      D      0
+404      D      0
+405      D      0
+406      D      0
+407      D      0
+
+[200 rows x 2 columns] 
+[!] get information out:      driver  label
+0       A      0
+1       A      0
+2       A      0
+3       A      0
+4       A      0
+..    ...    ...
+16      D      0
+17      D      0
+18      D      0
+19      D      0
+20      D      0
+
+[84 rows x 2 columns] 
+Literature. 139 Features after pre-processing: ['fuel_usage_entropy', 'fuel_usage_complexity', 'fuel_usage_fisher', 'fuel_usage_shannon', 'throttle_position_complexity', 'throttle_position_shannon', 'short_fuel_bank_complexity', 'short_fuel_bank_fisher', 'short_fuel_bank_shannon', 'inhale_pressure_complexity', 'inhale_pressure_fisher', 'inhale_pressure_shannon', 'accelerator_position_filtered_entropy', 'accelerator_position_filtered_complexity', 'accelerator_position_filtered_fisher', 'accelerator_position_filtered_shannon', 'throttle_position_abs_complexity', 'throttle_position_abs_shannon', 'engine_pressure_maintanance_time_entropy', 'engine_pressure_maintanance_time_complexity', 'engine_pressure_maintanance_time_fisher', 'engine_pressure_maintanance_time_shannon', 'reduce_block_fuel_fisher', 'reduce_block_fuel_shannon', 'block_fuel_entropy', 'block_fuel_complexity', 'block_fuel_fisher', 'block_fuel_shannon', 'fuel_pressure_entropy', 'fuel_pressure_complexity', 'fuel_pressure_fisher', 'fuel_pressure_shannon', 'long_fuel_bank_complexity', 'long_fuel_bank_fisher', 'long_fuel_bank_shannon', 'engine_speed_entropy', 'engine_speed_complexity', 'engine_speed_fisher', 'engine_speed_shannon', 'friction_torque_complexity', 'friction_torque_fisher', 'friction_torque_shannon', 'flywheel_torque_revised_entropy', 'flywheel_torque_revised_complexity', 'flywheel_torque_revised_fisher', 'flywheel_torque_revised_shannon', 'current_fire_timing_entropy', 'current_fire_timing_complexity', 'current_fire_timing_fisher', 'current_fire_timing_shannon', 'cooling_temperature_fisher', 'cooling_temperature_shannon', 'engine_idle_slippage_complexity', 'engine_idle_slippage_shannon', 'engine_torque_complexity', 'engine_torque_fisher', 'engine_torque_shannon', 'calculation_overhead_complexity', 'calculation_overhead_shannon', 'engine_torque_min_complexity', 'engine_torque_min_fisher', 'engine_torque_min_shannon', 'engine_torque_max_complexity', 'engine_torque_max_shannon', 'flywheel_torque_entropy', 'flywheel_torque_complexity', 'flywheel_torque_fisher', 'flywheel_torque_shannon', 'torque_transform_coeff_entropy', 'torque_transform_coeff_complexity', 'torque_transform_coeff_fisher', 'torque_transform_coeff_shannon', 'standard_torque_ratio_fisher', 'standard_torque_ratio_shannon', 'fire_angle_delay_tcu_entropy', 'fire_angle_delay_tcu_complexity', 'fire_angle_delay_tcu_fisher', 'fire_angle_delay_tcu_shannon', 'engine_torque_limit_tcu_fisher', 'engine_torque_limit_tcu_shannon', 'engine_velocity_increase_tcu_fisher', 'engine_velocity_increase_tcu_shannon', 'target_engine_velocity_lockup_entropy', 'target_engine_velocity_lockup_complexity', 'target_engine_velocity_lockup_fisher', 'target_engine_velocity_lockup_shannon', 'glow_plug_limit_request_entropy', 'glow_plug_limit_request_complexity', 'glow_plug_limit_request_fisher', 'glow_plug_limit_request_shannon', 'compressor_activation_entropy', 'compressor_activation_complexity', 'compressor_activation_fisher', 'compressor_activation_shannon', 'current_gear_fisher', 'current_gear_shannon', 'mission_oil_temp_fisher', 'mission_oil_temp_shannon', 'wheel_velo_frontright_complexity', 'wheel_velo_frontright_shannon', 'wheel_velo_backleft_complexity', 'torque_converter_turbin_speed_complexity', 'torque_converter_turbin_speed_fisher', 'torque_converter_turbin_speed_shannon', 'clutch_check_entropy', 'clutch_check_complexity', 'clutch_check_fisher', 'clutch_check_shannon', 'converter_clutch_fisher', 'converter_clutch_shannon', 'gear_choice_entropy', 'gear_choice_complexity', 'gear_choice_fisher', 'gear_choice_shannon', 'car_speed_complexity', 'car_speed_fisher', 'car_speed_shannon', 'logitude_acceleration_entropy', 'logitude_acceleration_complexity', 'logitude_acceleration_fisher', 'logitude_acceleration_shannon', 'brake_switch_fisher', 'brake_switch_shannon', 'brake_sylinder_entropy', 'brake_sylinder_complexity', 'brake_sylinder_fisher', 'brake_sylinder_shannon', 'road_slope_fisher', 'road_slope_shannon', 'latitude_acceleration_entropy', 'latitude_acceleration_complexity', 'latitude_acceleration_fisher', 'latitude_acceleration_shannon', 'steering_wheel_acceleration_complexity', 'steering_wheel_acceleration_fisher', 'steering_wheel_acceleration_shannon', 'steering_wheel_angle_complexity', 'steering_wheel_angle_fisher', 'steering_wheel_angle_shannon'] 
+
+    [partial data]
+        score_dic = {'Linear SVM': [0.9875, 1.0, 1.0], 'RBF SVM': [1.0, 0.9882352941176471, 0.9507352941176471], 'D. Tree': [1.0, 0.9058823529411765, 0.9279411764705883], 'N. Bayes': [1.0, 1.0, 1.0], 'kNN': [0.9625, 0.9875, 1.0], 'R. Forest': [1.0, 1.0, 0.9882352941176471], 'MLP': [1.0, 1.0, 1.0]}
+        time_dic  = {'Linear SVM': [0.006017255783081055, 0.0056683063507080075, 0.006177139282226562], 'RBF SVM': [0.005374908447265625, 0.006806516647338867, 0.006777572631835938], 'D. Tree': [0.009079599380493164, 0.01017932891845703, 0.004821205139160156], 'N. Bayes': [0.01541604995727539, 0.01365833282470703, 0.005843687057495117], 'kNN': [0.053714418411254884, 0.05920209884643555, 0.10539698600769043], 'R. Forest': [0.03138155937194824, 0.05000467300415039, 0.021439218521118165], 'MLP': [0.054346656799316405, 0.09250340461730958, 0.09123702049255371]}
+    [end partial data]
+     
+Dataset size shape: (200, 53) 
+
+Driver D 
+ 
+Literature. 36 Features after pre-processing: ['short_fuel_bank', 'accelerator_position_filtered', 'throttle_position_abs', 'engine_pressure_maintanance_time', 'reduce_block_fuel', 'block_fuel', 'fuel_pressure', 'long_fuel_bank', 'friction_torque', 'flywheel_torque_revised', 'current_fire_timing', 'cooling_temperature', 'engine_torque', 'calculation_overhead', 'engine_torque_min', 'flywheel_torque', 'torque_transform_coeff', 'standard_torque_ratio', 'fire_angle_delay_tcu', 'engine_torque_limit_tcu', 'engine_velocity_increase_tcu', 'target_engine_velocity_lockup', 'glow_plug_limit_request', 'compressor_activation', 'mission_oil_temp', 'torque_converter_turbin_speed', 'clutch_check', 'converter_clutch', 'gear_choice', 'car_speed', 'brake_switch', 'brake_sylinder', 'road_slope', 'latitude_acceleration', 'steering_wheel_acceleration', 'steering_wheel_angle'] 
+
+    [partial data]
+        score_dic = {'Linear SVM': [0.9949999999999999, 0.75, 0.75, 0.9800000000000001], 'RBF SVM': [0.945, 0.86, 0.89, 0.945], 'D. Tree': [0.985, 0.93, 0.905, 0.9799999999999999], 'N. Bayes': [0.8800000000000001, 0.795, 0.9199999999999999, 0.9400000000000001], 'R. Forest': [0.9650000000000001, 0.925, 0.9400000000000001, 0.9550000000000001], 'kNN': [0.95, 0.8550000000000001, 0.7949999999999999, 0.95], 'MLP': [0.9650000000000001, 0.8, 0.8949999999999999, 0.9550000000000001]}
+        time_dic  = {'Linear SVM': [0.004273700714111328, 0.005063390731811524, 0.010014629364013672, 0.0055468082427978516], 'RBF SVM': [0.005757856369018555, 0.004050350189208985, 0.0049629688262939455, 0.008169412612915039], 'D. Tree': [0.0032279491424560547, 0.003185892105102539, 0.004340171813964844, 0.004123830795288086], 'N. Bayes': [0.017218399047851562, 0.008614015579223634, 0.0036708831787109373, 0.007977628707885742], 'R. Forest': [0.038188934326171875, 0.0467780590057373, 0.014786052703857421, 0.02237677574157715], 'kNN': [0.07864179611206054, 0.11519021987915039, 0.10386843681335449, 0.0635335922241211], 'MLP': [0.10540328025817872, 0.19313669204711914, 0.17609767913818358, 0.09671483039855958]}
+    [end partial data]
+     
+[!] get information entry:     driver  label
+0        A      0
+1        A      0
+2        A      0
+3        A      0
+4        A      0
+..     ...    ...
+195      D      1
+196      D      1
+197      D      1
+198      D      1
+199      D      1
+
+[200 rows x 2 columns] 
+[!] get information out:      driver  label
+0       A      0
+1       A      0
+2       A      0
+3       A      0
+4       A      0
+..    ...    ...
+16      D      1
+17      D      1
+18      D      1
+19      D      1
+20      D      1
+
+[84 rows x 2 columns] 
+Information-Teory. 
+
+    [partial data]
+        score_dic = {'RBF SVM': [1.0, 1.0, 1.0, 1.0], 'Linear SVM': [1.0, 0.75, 0.9882352941176471, 1.0], 'D. Tree': [0.9625, 0.95, 1.0, 0.9764705882352942], 'N. Bayes': [1.0, 1.0, 1.0, 0.9058823529411765], 'R. Forest': [1.0, 1.0, 1.0, 1.0], 'kNN': [1.0, 0.9294117647058823, 1.0, 1.0], 'MLP': [1.0, 1.0, 1.0, 1.0]}
+        time_dic  = {'RBF SVM': [0.005942869186401367, 0.006786155700683594, 0.005829620361328125, 0.00978260040283203], 'Linear SVM': [0.0075759410858154295, 0.007002687454223633, 0.009828615188598632, 0.007653474807739258], 'D. Tree': [0.005016946792602539, 0.010770940780639648, 0.012162494659423827, 0.015921688079833983], 'N. Bayes': [0.008535146713256836, 0.015025472640991211, 0.008685636520385741, 0.014989805221557618], 'R. Forest': [0.04225740432739258, 0.04083261489868164, 0.026431989669799805, 0.0481532096862793], 'kNN': [0.074043607711792, 0.08047928810119628, 0.06489629745483398, 0.09441275596618652], 'MLP': [0.08784842491149902, 0.10997304916381836, 0.10209889411926269, 0.10868263244628906]}
+    [end partial data]
+     
+Both. 
+[!] get information entry:     driver  label
+912      A      0
+913      A      0
+914      A      0
+915      A      0
+916      A      0
+..     ...    ...
+895      D      1
+896      D      1
+897      D      1
+898      D      1
+899      D      1
+
+[200 rows x 2 columns] 
+[!] get information out:      driver  label
+0       A      0
+1       A      0
+2       A      0
+3       A      0
+4       A      0
+..    ...    ...
+16      D      1
+17      D      1
+18      D      1
+19      D      1
+20      D      1
+
+[84 rows x 2 columns] 
+Literature. 130 Features after pre-processing: ['fuel_usage_complexity', 'fuel_usage_fisher', 'fuel_usage_shannon', 'throttle_position_complexity', 'throttle_position_shannon', 'short_fuel_bank_entropy', 'short_fuel_bank_complexity', 'short_fuel_bank_fisher', 'short_fuel_bank_shannon', 'inhale_pressure_complexity', 'inhale_pressure_fisher', 'inhale_pressure_shannon', 'accelerator_position_filtered_entropy', 'accelerator_position_filtered_complexity', 'accelerator_position_filtered_fisher', 'accelerator_position_filtered_shannon', 'throttle_position_abs_complexity', 'throttle_position_abs_shannon', 'engine_pressure_maintanance_time_entropy', 'engine_pressure_maintanance_time_complexity', 'engine_pressure_maintanance_time_fisher', 'engine_pressure_maintanance_time_shannon', 'reduce_block_fuel_entropy', 'reduce_block_fuel_complexity', 'reduce_block_fuel_fisher', 'reduce_block_fuel_shannon', 'fuel_pressure_entropy', 'fuel_pressure_complexity', 'fuel_pressure_fisher', 'fuel_pressure_shannon', 'long_fuel_bank_shannon', 'engine_speed_complexity', 'engine_speed_fisher', 'engine_speed_shannon', 'friction_torque_complexity', 'friction_torque_fisher', 'friction_torque_shannon', 'flywheel_torque_revised_entropy', 'flywheel_torque_revised_complexity', 'flywheel_torque_revised_fisher', 'flywheel_torque_revised_shannon', 'current_fire_timing_entropy', 'current_fire_timing_complexity', 'current_fire_timing_fisher', 'current_fire_timing_shannon', 'cooling_temperature_fisher', 'cooling_temperature_shannon', 'engine_torque_complexity', 'engine_torque_fisher', 'engine_torque_shannon', 'calculation_overhead_complexity', 'calculation_overhead_fisher', 'calculation_overhead_shannon', 'engine_torque_min_complexity', 'engine_torque_min_fisher', 'engine_torque_min_shannon', 'engine_torque_max_complexity', 'engine_torque_max_shannon', 'flywheel_torque_entropy', 'flywheel_torque_complexity', 'flywheel_torque_fisher', 'flywheel_torque_shannon', 'torque_transform_coeff_entropy', 'torque_transform_coeff_complexity', 'torque_transform_coeff_fisher', 'torque_transform_coeff_shannon', 'standard_torque_ratio_entropy', 'standard_torque_ratio_complexity', 'standard_torque_ratio_fisher', 'standard_torque_ratio_shannon', 'fire_angle_delay_tcu_entropy', 'fire_angle_delay_tcu_complexity', 'fire_angle_delay_tcu_fisher', 'fire_angle_delay_tcu_shannon', 'engine_torque_limit_tcu_fisher', 'engine_torque_limit_tcu_shannon', 'engine_velocity_increase_tcu_fisher', 'engine_velocity_increase_tcu_shannon', 'target_engine_velocity_lockup_entropy', 'target_engine_velocity_lockup_complexity', 'target_engine_velocity_lockup_fisher', 'target_engine_velocity_lockup_shannon', 'glow_plug_limit_request_entropy', 'glow_plug_limit_request_complexity', 'glow_plug_limit_request_fisher', 'glow_plug_limit_request_shannon', 'compressor_activation_entropy', 'compressor_activation_complexity', 'compressor_activation_fisher', 'compressor_activation_shannon', 'current_gear_fisher', 'current_gear_shannon', 'mission_oil_temp_fisher', 'mission_oil_temp_shannon', 'wheel_velo_backleft_complexity', 'wheel_velo_backleft_shannon', 'torque_converter_turbin_speed_complexity', 'torque_converter_turbin_speed_fisher', 'torque_converter_turbin_speed_shannon', 'clutch_check_entropy', 'clutch_check_complexity', 'clutch_check_fisher', 'clutch_check_shannon', 'gear_choice_entropy', 'gear_choice_complexity', 'gear_choice_fisher', 'gear_choice_shannon', 'car_speed_fisher', 'car_speed_shannon', 'logitude_acceleration_entropy', 'logitude_acceleration_complexity', 'logitude_acceleration_fisher', 'logitude_acceleration_shannon', 'brake_switch_fisher', 'brake_switch_shannon', 'brake_sylinder_entropy', 'brake_sylinder_complexity', 'brake_sylinder_fisher', 'brake_sylinder_shannon', 'road_slope_fisher', 'road_slope_shannon', 'latitude_acceleration_entropy', 'latitude_acceleration_complexity', 'latitude_acceleration_fisher', 'latitude_acceleration_shannon', 'steering_wheel_acceleration_fisher', 'steering_wheel_acceleration_shannon', 'steering_wheel_angle_complexity', 'steering_wheel_angle_fisher', 'steering_wheel_angle_shannon'] 
+
+    [partial data]
+        score_dic = {'Linear SVM': [0.9875, 1.0, 1.0, 1.0], 'RBF SVM': [1.0, 0.9882352941176471, 0.9507352941176471, 0.9647058823529411], 'D. Tree': [1.0, 0.9058823529411765, 0.9279411764705883, 0.8507352941176471], 'N. Bayes': [1.0, 1.0, 1.0, 0.8823529411764707], 'kNN': [0.9625, 0.9875, 1.0, 1.0], 'R. Forest': [1.0, 1.0, 0.9882352941176471, 1.0], 'MLP': [1.0, 1.0, 1.0, 1.0]}
+        time_dic  = {'Linear SVM': [0.006017255783081055, 0.0056683063507080075, 0.006177139282226562, 0.005363368988037109], 'RBF SVM': [0.005374908447265625, 0.006806516647338867, 0.006777572631835938, 0.011197376251220702], 'D. Tree': [0.009079599380493164, 0.01017932891845703, 0.004821205139160156, 0.0057485103607177734], 'N. Bayes': [0.01541604995727539, 0.01365833282470703, 0.005843687057495117, 0.010461139678955077], 'kNN': [0.053714418411254884, 0.05920209884643555, 0.10539698600769043, 0.08516130447387696], 'R. Forest': [0.03138155937194824, 0.05000467300415039, 0.021439218521118165, 0.0263308048248291], 'MLP': [0.054346656799316405, 0.09250340461730958, 0.09123702049255371, 0.05696978569030762]}
+    [end partial data]
+     
+
+Chart 
+
+[data]  Classifier's Accuracy:
+
+- Literature:
+  - accuracy:  [0.8875, 0.86875, 0.9099999999999999, 0.9500000000000001, 0.94625, 0.90375, 0.88375]
+  - std error: [0.038106211217245584, 0.06862868083631896, 0.0211147657655332, 0.01947220240924651, 0.008750000000000008, 0.037880018919389864, 0.032104971058492894]
+
+- Complexity-Entropy:
+  - accuracy:  [0.9823529411764705, 0.9345588235294118, 1.0, 0.9722426470588236, 1.0, 1.0, 0.9764705882352941]
+  - std error: [0.017647058823529432, 0.061582071249863785, 0.0, 0.010716034126442368, 0.0, 0.0, 0.023529411764705882]
+
+- Both:
+  - accuracy:  [0.9875, 0.996875, 0.9759191176470587, 0.9211397058823529, 0.9970588235294118, 1.0, 0.9705882352941176]
+  - std error: [0.008838834764831839, 0.003124999999999989, 0.011148761930788042, 0.030896027259706468, 0.002941176470588225, 0.0, 0.02941176470588233]
+
+[end data]
+         
+Output training times (ms): 
+
+    kNN:
+      - Literature  : 90.30851125717163 +- 11.747267542361532
+      - Comp.Entropy: 78.4579873085022 +- 6.205148928683545
+      - Both        : 75.86870193481445 +- 11.99604087183655
+ 
+
+    Linear SVM:
+      - Literature  : 6.224632263183594 +- 1.2902887025216858
+      - Comp.Entropy: 8.015179634094238 +- 0.6216543659423586
+      - Both        : 5.8065176010131845 +- 0.1819464332480491
+ 
+
+    RBF SVM:
+      - Literature  : 5.735146999359131 +- 0.883221575411169
+      - Comp.Entropy: 7.085311412811279 +- 0.9240669299914145
+      - Both        : 7.539093494415283 +- 1.264361252044619
+ 
+
+    D. Tree:
+      - Literature  : 3.719460964202881 +- 0.29931540187882905
+      - Comp.Entropy: 10.968017578125 +- 2.2623680384289067
+      - Both        : 7.457160949707031 +- 1.2880946776210926
+ 
+
+    R. Forest:
+      - Literature  : 30.53245544433594 +- 7.28586310731015
+      - Comp.Entropy: 39.41880464553833 +- 4.6098056919959935
+      - Both        : 32.289063930511475 +- 6.244239787943168
+ 
+
+    MLP:
+      - Literature  : 142.83812046051025 +- 24.435066492985975
+      - Comp.Entropy: 102.15075016021729 +- 5.069623954413385
+      - Both        : 73.76421689987184 +- 10.47039708578935
+ 
+
+    N. Bayes:
+      - Literature  : 9.370231628417969 +- 2.837068766085442
+      - Comp.Entropy: 11.80901527404785 +- 1.846996049348489
+      - Both        : 11.344802379608154 +- 2.1010039170749826
+ 
+
+[data]  Classifier's Training time (ms):
+
+- Literature:
+  y_lt_trainingtime = [90.30851125717163, 6.224632263183594, 5.735146999359131, 3.719460964202881, 30.53245544433594, 142.83812046051025, 9.370231628417969]
+  y_lt_std_error_trainingtime = [11.747267542361532, 1.2902887025216858, 0.883221575411169, 0.29931540187882905, 7.28586310731015, 24.435066492985975, 2.837068766085442]
+  y_inf_trainingtime = [78.4579873085022, 8.015179634094238, 7.085311412811279, 10.968017578125, 39.41880464553833, 102.15075016021729, 11.80901527404785]
+  y_inf_std_error_trainingtime = [6.205148928683545, 0.6216543659423586, 0.9240669299914145, 2.2623680384289067, 4.6098056919959935, 5.069623954413385, 1.846996049348489]
+  y_both = [75.86870193481445, 5.8065176010131845, 7.539093494415283, 7.457160949707031, 32.289063930511475, 73.76421689987184, 11.344802379608154]
+  y_both_std_error_trainingtime = [11.99604087183655, 0.1819464332480491, 1.264361252044619, 1.2880946776210926, 6.244239787943168, 10.47039708578935, 2.1010039170749826]
+
+[end data]
+         
+
+[data]  Classifier's Data handle time (ms):
+
+  time_dataprocessing = [0.09061217308044434, 0.08285951614379883, 0.08968377113342285, 0.09039592742919922]
+  time_hc_calculate = [1.7612810134887695, 1.643280029296875, 1.8449726104736328, 1.797264575958252]
+
+[end data]
+         
+Output total times (ms): 
+
+    kNN:
+      - Literature  : 178.69635820388794 +- 11.747267542361532
+      - Comp.Entropy: 1840.1575446128845 +- 6.205148928683545
+      - Both        : 1925.956106185913 +- 11.99604087183655
+ 
+
+    Linear SVM:
+      - Literature  : 94.6124792098999 +- 1.2902887025216858
+      - Comp.Entropy: 1769.7147369384766 +- 0.6216543659423586
+      - Both        : 1855.8939218521118 +- 0.1819464332480491
+ 
+
+    RBF SVM:
+      - Literature  : 94.12299394607544 +- 0.883221575411169
+      - Comp.Entropy: 1768.7848687171936 +- 0.9240669299914145
+      - Both        : 1857.626497745514 +- 1.264361252044619
+ 
+
+    D. Tree:
+      - Literature  : 92.10730791091919 +- 0.29931540187882905
+      - Comp.Entropy: 1772.6675748825073 +- 2.2623680384289067
+      - Both        : 1857.5445652008057 +- 1.2880946776210926
+ 
+
+    R. Forest:
+      - Literature  : 118.92030239105225 +- 7.28586310731015
+      - Comp.Entropy: 1801.1183619499207 +- 4.6098056919959935
+      - Both        : 1882.37646818161 +- 6.244239787943168
+ 
+
+    MLP:
+      - Literature  : 231.22596740722656 +- 24.435066492985975
+      - Comp.Entropy: 1863.8503074645996 +- 5.069623954413385
+      - Both        : 1923.8516211509705 +- 10.47039708578935
+ 
+
+    N. Bayes:
+      - Literature  : 97.75807857513428 +- 2.837068766085442
+      - Comp.Entropy: 1773.5085725784302 +- 1.846996049348489
+      - Both        : 1861.4322066307068 +- 2.1010039170749826
+ 
+
+[data]  Classifier's Total time (ms):
+
+  y_lt_totaltime = [178.69635820388794, 94.6124792098999, 94.12299394607544, 92.10730791091919, 118.92030239105225, 231.22596740722656, 97.75807857513428]
+  y_lt_std_error_totaltime = [11.747267542361532, 1.2902887025216858, 0.883221575411169, 0.29931540187882905, 7.28586310731015, 24.435066492985975, 2.837068766085442]
+  y_inf_totaltime = [1840.1575446128845, 1769.7147369384766, 1768.7848687171936, 1772.6675748825073, 1801.1183619499207, 1863.8503074645996, 1773.5085725784302]
+  y_inf_std_error_totaltime =  [6.205148928683545, 0.6216543659423586, 0.9240669299914145, 2.2623680384289067, 4.6098056919959935, 5.069623954413385, 1.846996049348489]
+  y_both_totaltime = [1925.956106185913, 1855.8939218521118, 1857.626497745514, 1857.5445652008057, 1882.37646818161, 1923.8516211509705, 1861.4322066307068]
+  y_both_std_error_totaltime = [11.99604087183655, 0.1819464332480491, 1.264361252044619, 1.2880946776210926, 6.244239787943168, 10.47039708578935, 2.1010039170749826]
+
+[end data]
+         
+
+[time] 0:00:31.541610 

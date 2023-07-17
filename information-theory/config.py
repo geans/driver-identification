@@ -1,20 +1,20 @@
 # Path to dataset, download from:
 #   https://ieee-dataport.org/open-access/car-mine-driver-pattern-dataset-extracted-can-bus
-path_dataset = '/home/gean/workspace/ThisCarIsMine/'
+path_dataset = '/home/gean/workspace/ThisCarIsMine'
 
 # Debug on screen
 debug_on_screen = False
 
 # Sample size for each driver (amount): -1 to all
-sample_size = -1
+sample_size = 500
 # sample_size = 9700
 
 # Size for time series to apply Entropy-Complexity measure (amount)
-hc_size = 20
+hc_size = 30
 
 # Parameter for Entropy-Complexity measure.
 #   see https://arthurpessa.github.io/ordpy/_build/html/index.html#ordpy.complexity_entropy
-dx, dy, taux, tauy = [3,1,1,1]  # Decision Tree, SVM RBF
+dx, dy, taux, tauy = [3, 1, 1, 1]  # Decision Tree, SVM RBF
 # dx, dy, taux, tauy = [2,1,5,1]
 # dx, dy, taux, tauy = [3,1,1,3]  # kNN
 # dx, dy, taux, tauy = [3,1,3,2]  # SVM
@@ -23,8 +23,13 @@ dx, dy, taux, tauy = [3,1,1,1]  # Decision Tree, SVM RBF
 entropy_complexity_parameters = [dx, dy, taux, tauy]
 
 # Number of repetitions to average measurements
-num_repetitions = 3
+num_repetitions = 5
+k_fold = 5
 
+# Feature names that contain the class (used to identify one driver)
+# and the driver ID (used to identify each driver)
+label = 'class'
+driver = 'driver'
 
 # DON'T EDIT THIS LIST
 ALL_FEATURES = [
@@ -93,4 +98,4 @@ features = [
     'engine_torque',
     'car_speed'
 ]
-features = ALL_FEATURES
+# features = ALL_FEATURES
