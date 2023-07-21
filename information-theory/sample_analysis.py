@@ -9,7 +9,7 @@ from sklearn.tree import DecisionTreeClassifier
 from scipy.stats import sem
 
 import config
-import datapreprocessing as dpp
+import data_preprocessing as dpp
 from information import InformationHandle
 from getdata import GetData
 
@@ -36,7 +36,7 @@ if __name__ == '__main__':
     running_process = []
     clf = DecisionTreeClassifier(max_depth=51)
     # clf = SVC(gamma=.9, C=1)
-    infhandle = InformationHandle(label, driver)
+    inf_handle = InformationHandle(label, driver)
 
 
     def classifier_handle(clf, df, technique):
@@ -46,7 +46,7 @@ if __name__ == '__main__':
         pp.normalization()
         pp.remove_miss_value()
         if technique == inf:
-            df = infhandle.get_information_binary_label(pp.get_df(), both=True)
+            df = inf_handle.get_information_binary_label(pp.get_df(), both=True)
         else:
             pp.window()
             df = pp.get_df()
@@ -65,7 +65,7 @@ if __name__ == '__main__':
 
             # literature
             for d in driver_list:
-                df = dataserver.get_sample(samplesize=sz,
+                df = dataserver.get_sample(sample_size=sz,
                                            driver_target=d)
                 p = multiprocessing.Process(target=classifier_handle,
                                             args=(clf, df, lit))
@@ -74,7 +74,7 @@ if __name__ == '__main__':
 
             # literature + information
             for d in driver_list:
-                df = dataserver.get_sample(samplesize=sz,
+                df = dataserver.get_sample(sample_size=sz,
                                            driver_target=d)
                 p = multiprocessing.Process(target=classifier_handle,
                                             args=(clf, df, inf))

@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 
 import config
-from plotresults import PlotResults
+from plot_results import PlotResults
 from datetime import timedelta
 from getdata import GetData
 from information import InformationHandle
@@ -19,7 +19,7 @@ import multiprocessing
 import numpy as np
 import time
 
-from datapreprocessing import LiteraturePreprocessing
+from data_preprocessing import LiteraturePreprocessing
 
 import warnings
 
@@ -433,7 +433,7 @@ dx,dy,tx,ty = {dx, dy, tx, ty}
 [end data]
         ''')
 
-    pltr = PlotResults(classifier_names, SAMPLE_SIZE)
+    pltr = PlotResults(classifier_names, SAMPLE_SIZE, output_folder='results/classifier_analysis')
     pltr.plot_accuracy(y_lt_accuracy, y_lt_std_error_accuracy,
                        y_inf_accuracy, y_inf_std_error_accuracy,
                        y_both_accuracy, y_both_std_error_accuracy)

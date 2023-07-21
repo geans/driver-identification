@@ -27,20 +27,20 @@ class GetData:
         self.__DFC = pd.concat(list_df_c)
         self.__DFD = pd.concat(list_df_d)
 
-    def get_sample(self, samplesize=50, driver_target='A'):
+    def get_sample(self, sample_size=50, driver_target='A'):
         data_a = self.__DFA.copy()
         data_b = self.__DFB.copy()
         data_c = self.__DFC.copy()
         data_d = self.__DFD.copy()
-        if samplesize > 0:
-            i = randint(0, max(data_a.shape[0] - samplesize, 0))
-            data_a = data_a[i:i + samplesize]
-            i = randint(0, max(data_b.shape[0] - samplesize, 0))
-            data_b = data_b[i:i + samplesize]
-            i = randint(0, max(data_c.shape[0] - samplesize, 0))
-            data_c = data_c[i:i + samplesize]
-            i = randint(0, max(data_d.shape[0] - samplesize, 0))
-            data_d = data_d[i:i + samplesize]
+        if sample_size > 0:
+            i = randint(0, max(data_a.shape[0] - sample_size, 0))
+            data_a = data_a[i:i + sample_size]
+            i = randint(0, max(data_b.shape[0] - sample_size, 0))
+            data_b = data_b[i:i + sample_size]
+            i = randint(0, max(data_c.shape[0] - sample_size, 0))
+            data_c = data_c[i:i + sample_size]
+            i = randint(0, max(data_d.shape[0] - sample_size, 0))
+            data_d = data_d[i:i + sample_size]
         data_a[self.__label] = [int(driver_target == 'A')] * data_a.shape[0]
         data_b[self.__label] = [int(driver_target == 'B')] * data_b.shape[0]
         data_c[self.__label] = [int(driver_target == 'C')] * data_c.shape[0]
