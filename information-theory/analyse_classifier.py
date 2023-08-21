@@ -7,6 +7,7 @@ from getdata import GetData
 from information import InformationHandle
 from numpy import mean
 from scipy.stats import sem
+from sklearn import metrics
 from sklearn.model_selection import cross_validate
 from sklearn.neural_network import MLPClassifier
 from sklearn.neighbors import KNeighborsClassifier
@@ -18,13 +19,13 @@ import matplotlib.pyplot as plt
 import multiprocessing
 import numpy as np
 import time
+import analyse_data
 
 from data_preprocessing import LiteraturePreprocessing
 
 import warnings
 
 warnings.filterwarnings("ignore")
-
 
 PATH_DATASET = config.path_dataset
 SAMPLE_SIZE = config.sample_size
@@ -71,116 +72,6 @@ classifiers = [
 ]
 
 
-# PRE-PROCESSING
-
-# class Preprocessing:
-#     def __init__(self, df, label_feature_name, driver_feature_name):
-#         self.__df = df
-#         self.__target = label_feature_name
-#         self.__driver = driver_feature_name
-#
-#     def get_df(self):
-#         return self.__df
-#
-#     def get_df_list(self):
-#         df = self.__df
-#         return [df[df[self.__driver] == 'A'], df[df[self.__driver] == 'B'],
-#                 df[df[self.__driver] == 'C'], df[df[self.__driver] == 'D']]
-#
-#     def remove_correlation(self, correlate_threshold=0.95):
-#         df = self.__df
-#         correlate_threshold = 0.95
-#         included = [self.__target, self.__driver]
-#         columns = list(df.drop([self.__target, self.__driver], axis=1).columns)
-#         for i in range(len(columns)):
-#             c1 = df[columns[i]]
-#             must_add = True
-#             for j in range(i + 1, len(columns), 1):
-#                 c2 = df[columns[j]]
-#                 if c1.corr(c2) > 0.95:
-#                     must_add = False
-#                     break
-#             if must_add:
-#                 included.append(columns[i])
-#         self.__df = df[included]
-#
-#     def remove_miss_value(self):
-#         self.__df = self.__df.dropna(axis=0)
-#
-#     def normalization(self):
-#         df = self.__df
-#         x = df.drop([self.__target, self.__driver], axis=1).values  # returns a numpy array
-#         min_max_scaler = preprocessing.MinMaxScaler()
-#         x_scaled = min_max_scaler.fit_transform(x)
-#         new_df = pd.DataFrame(x_scaled, columns=df.drop([self.__target, self.__driver], axis=1).columns)
-#         new_df[self.__target] = df[self.__target]
-#         new_df[self.__driver] = df[self.__driver]
-#         self.__df = new_df
-#
-#     def remove_invariants(self):
-#         df = self.__df
-#         new_df = df.drop([self.__target, self.__driver], axis=1)
-#         new_df = new_df.loc[:, (new_df != new_df.iloc[0]).any()]
-#         new_df[self.__target] = df[self.__target]
-#         new_df[self.__driver] = df[self.__driver]
-#         self.__df = new_df
-#
-#     def window(self, size=30):
-#         df = self.__df
-#         new_df = df.rolling(size, center=True, min_periods=1).mean()
-#         new_df[self.__target] = df[self.__target]
-#         new_df[self.__driver] = df[self.__driver]
-#         self.__df = new_df
-#
-#
-# class InfPreprocessing:
-#     def __init__(self, df, label_feature_name, driver_feature_name):
-#         self.__df = df
-#         self.__target = label_feature_name
-#         self.__driver = driver_feature_name
-#
-#     def get_df(self):
-#         return self.__df
-#
-#     def get_df_list(self):
-#         df = self.__df
-#         return [df[df[self.__driver] == 'A'], df[df[self.__driver] == 'B'],
-#                 df[df[self.__driver] == 'C'], df[df[self.__driver] == 'D']]
-#
-#     def drop_consecutive_duplicates(self):
-#         self.__remove_invariants()
-#         self.__remove_correlation()
-#         df = self.__df
-#         self.__df = df.loc[(df.shift(-1) != df).any(axis=1)]
-#         # for col in df.drop([self.__target, self.__driver], axis=1).columns:
-#         #     df = df.loc[df[col].shift(-1) != df[col]]
-#
-#     def __remove_invariants(self):
-#         df = self.__df
-#         new_df = df.drop([self.__target, self.__driver], axis=1)
-#         new_df = new_df.loc[:, (new_df != new_df.iloc[0]).any()]
-#         new_df[self.__target] = df[self.__target]
-#         new_df[self.__driver] = df[self.__driver]
-#         self.__df = new_df
-#
-#     def __remove_correlation(self, correlate_threshold=0.95):
-#         df = self.__df
-#         correlate_threshold = 0.95
-#         included = [self.__target, self.__driver]
-#         columns = list(df.drop([self.__target, self.__driver], axis=1).columns)
-#         for i in range(len(columns)):
-#             c1 = df[columns[i]]
-#             must_add = True
-#             for j in range(i + 1, len(columns), 1):
-#                 c2 = df[columns[j]]
-#                 if c1.corr(c2) > 0.95:
-#                     must_add = False
-#                     break
-#             if must_add:
-#                 included.append(columns[i])
-#         self.__df = df[included]
-
-
 def classifiers_train_test(X, y, _score_dic, _time_dic, k_fold):
     def classifier_handle(name, clf, X, y):
         t0 = time.time()
@@ -210,7 +101,107 @@ def classifiers_train_test(X, y, _score_dic, _time_dic, k_fold):
     return score_dic, time_dic
 
 
+def get_metrics(model, X_train, y_train, X_test, y_test):
+    model.fit(X_train, y_train)
+    y_predict = model.predict(X_test)
+    accuracy = metrics.accuracy_score(y_test, y_predict)
+    return accuracy
+
+
+def test_classifier(clf, data_size_fit):
+    mdebug('\n[Test-Zone]\n')
+    TARGET = config.label
+    DRIVER = config.driver
+    data_full = GetData(path_dataset='../../ThisCarIsMine',
+                        label_feature_name=config.label,
+                        driver_feature_name=config.driver,
+                        features=config.ALL_FEATURES,
+                        trips=None)
+
+    data_to_fit = GetData(path_dataset='../../ThisCarIsMine',
+                        label_feature_name=config.label,
+                        driver_feature_name=config.driver,
+                          trips=[1, 2, 3, 4])
+
+    data_to_test = GetData(path_dataset='../../ThisCarIsMine',
+                        label_feature_name=config.label,
+                        driver_feature_name=config.driver,
+                           trips=[5])
+
+    # analyse data
+    df = data_full.get_all().drop([TARGET, DRIVER], axis=1)
+    invariance, variance_df = analyse_data.analyse_variance(df)
+    corr, included, excluded = analyse_data.analyse_correlation(df=variance_df, correlate_threshold=.95)
+
+
+    inf_handle = InformationHandle(label_feature_name=TARGET,
+                                   driver_feature_name=DRIVER,
+                                   dx=dx,
+                                   dy=dy,
+                                   taux=tx,
+                                   tauy=ty)
+
+    for i in range(1):
+        for driver_target in ['A', 'B', 'C', 'D']:
+            df_fit = data_to_fit.get_sample(sample_size=data_size_fit,
+                                            driver_target=driver_target)[included + [TARGET, DRIVER]]
+            df_test = data_to_test.get_all(driver_target=driver_target)[included + [TARGET, DRIVER]]
+
+            # Literature
+            pp = LiteraturePreprocessing(df_fit, TARGET, DRIVER)
+            pp.normalization()
+            pp.remove_miss_value()
+            df_pp2 = pp.get_df()
+            pp.window()
+            df_pp = pp.get_df()
+            #
+            pp_test = LiteraturePreprocessing(df_test, TARGET, DRIVER)
+            pp_test.normalization()
+            pp_test.remove_miss_value()
+            df_pp2_test = pp_test.get_df()
+            pp_test.window()
+            df_pp_test = pp_test.get_df()
+
+            X_train, y_train = df_pp.drop([TARGET, DRIVER], axis=1), df_pp[TARGET]
+            X_test, y_test = df_pp_test.drop([TARGET, DRIVER], axis=1), df_pp_test[TARGET]
+            mdebug(f"Literature.")
+            accuracy_lt = get_metrics(clf, X_train, y_train, X_test, y_test)
+
+            # Entropy-Complexty (HC)
+            mdebug(f"Information-Teory.")
+
+            df_hc = inf_handle.get_information_binary_label(df_fit)
+            df_hc_test = inf_handle.get_information_binary_label(df_test)
+
+            X_train, y_train = df_hc.drop([TARGET, DRIVER], axis=1), df_hc[TARGET]
+            X_test, y_test = df_hc_test.drop([TARGET, DRIVER], axis=1), df_hc_test[TARGET]
+            accuracy_inf = get_metrics(clf, X_train, y_train, X_test, y_test)
+
+            # Literature + Entropy-Complexty (HC)
+            mdebug(f"Both.")
+
+            df_joined = inf_handle.get_information_binary_label(df_pp2)
+            df_joined_test = inf_handle.get_information_binary_label(df_pp2_test)
+
+            X_train, y_train = df_joined.drop([TARGET, DRIVER], axis=1), df_joined[TARGET]
+            X_test, y_test = df_joined_test.drop([TARGET, DRIVER], axis=1), df_joined_test[TARGET]
+            accuracy_both = get_metrics(clf, X_train, y_train, X_test, y_test)
+
+            bar_width = 0.3
+            X_axis = np.arange(3)
+            fig, ax = plt.subplots(1, 1, figsize=(17, 9))
+            ax.bar(X_axis - bar_width, [accuracy_lt, accuracy_inf, accuracy_both])
+            ax.bar(X_axis, accuracy_inf)
+            ax.bar(X_axis + bar_width, accuracy_both)
+
+    mdebug('\n[End-Test-Zone]\n')
+
+
 if __name__ == '__main__':
+    # test_classifier(SVC(gamma=.9, C=1), 50)
+    # plt.show()
+    # exit()
+
     program_time = time.time()
     time_literature = {}
     score_literature = {}
@@ -234,7 +225,11 @@ if __name__ == '__main__':
                                    taux=tx,
                                    tauy=ty)
 
-    getdata = GetData('../../ThisCarIsMine', TARGET, DRIVER)
+    getdata_handler = GetData(path_dataset='../../ThisCarIsMine',
+                              label_feature_name=TARGET,
+                              driver_feature_name=DRIVER,
+                              features=config.ALL_FEATURES,
+                              trips=[1, 2, 3, 4])
 
     mdebug(
         f'''
@@ -247,8 +242,8 @@ dx,dy,tx,ty = {dx, dy, tx, ty}
 
     for i in range(NUM_REPETITIONS):
         for driver_target in ['A', 'B', 'C', 'D']:
-            df_raw = getdata.get_sample(SAMPLE_SIZE,
-                                        driver_target=driver_target)
+            df_raw = getdata_handler.get_sample(SAMPLE_SIZE,
+                                                driver_target=driver_target)
             mdebug('Dataset size shape:', df_raw.shape)
             mdebug('\nDriver', driver_target, '\n')
 
@@ -258,7 +253,7 @@ dx,dy,tx,ty = {dx, dy, tx, ty}
             pp = LiteraturePreprocessing(df_raw, TARGET, DRIVER)
             t0 = time.time()
 
-            pp.remove_correlation()
+            pp.remove_correlation(.95)
             pp.remove_invariants()
             pp.normalization()
             pp.remove_miss_value()
