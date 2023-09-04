@@ -2,6 +2,7 @@ import multiprocessing
 import time
 from datetime import timedelta
 
+import pandas as pd
 import numpy as np
 from matplotlib import pyplot as plt
 from sklearn.model_selection import cross_validate
@@ -20,6 +21,7 @@ def getx(df):
 
 
 def analyse_correlation(df, correlate_threshold):
+    print('\n  # ANALYSE CORRELATION')
     corr = df.corr()
 
     # write into file the min and max values correlations for each feature
@@ -70,11 +72,12 @@ def analyse_correlation(df, correlate_threshold):
     print('included =', included, '#', len(included), '\n')
     print('excluded =', excluded, '#', len(excluded), '\n')
 
-    print(corr)
+    # print(corr)
     return corr, included, excluded
 
 
 def plot_correlation(corr):
+    print('\n  # CORRELATION')
     # f, ax = plt.subplots(figsize=(10, 8))
     # ax.tick_params(axis='both', which='major', labelsize=20)
     # sns.set(font_scale=1.4)
@@ -85,36 +88,52 @@ def plot_correlation(corr):
     # f.subplots_adjust(bottom=0.4)
     plt.matshow(corr, vmin=-1.0, vmax=1.0)
     cb = plt.colorbar()
-    cb.ax.tick_params(labelsize=14)
-    plt.tick_params(labelsize=14)
+    # cb.ax.tick_params(labelsize=14)
+    # plt.tick_params(labelsize=14)
 
 
-def analyse_variance(dfx):
-    variance_df = dfx.loc[:, (dfx != dfx.iloc[0]).any()]
-    invariance = list(set(dfx.columns) - set(variance_df.columns))
-    print('feature_invariance =', invariance, '#', len(invariance))
-    print('feature_variance =', list(variance_df.columns), '#', variance_df.shape[1])
-    return invariance, variance_df
+# def analyse_variance(dfx):
+#     print('\n  # ANALYSE VARIANCE')
+#     variance_df = dfx.loc[:, (dfx != dfx.iloc[0]).any()]
+#     invariance = list(set(dfx.columns) - set(variance_df.columns))
+#     print('feature_invariance =', invariance, '#', len(invariance))
+#     print('feature_variance =', list(variance_df.columns), '#', variance_df.shape[1])
+#     return invariance, variance_df
+
+
+def show_variance():
+    print('\n  # VARIANCE')
+    path = '../../ThisCarIsMine'
+    dfa = pd.read_csv(path + '/A/All_1.csv')
+    dfb = pd.read_csv(path + '/B/All_1.csv')
+    dfc = pd.read_csv(path + '/C/All_1.csv')
+    dfd = pd.read_csv(path + '/D/All_1.csv')
+    a = [i for i in dfa.columns if np.std(dfa[i]) == 0]
+    b = [i for i in dfb.columns if np.std(dfb[i]) == 0]
+    c = [i for i in dfc.columns if np.std(dfc[i]) == 0]
+    d = [i for i in dfd.columns if np.std(dfd[i]) == 0]
+    print('Driver A:', len(a), a)
+    print('Driver B:', len(b), b)
+    print('Driver C:', len(c), c)
+    print('Driver D:', len(d), d)
+    x = set(a + b + c + d)
+    print('Join drivers:', len(x), x)
+    return x
 
 
 if __name__ == '__main__':
-    program_time = time.time()
-
-    features = config.ALL_FEATURES
-    # features = config.features
-
+    # Variance
+    feature_invariance = show_variance()
+    features = set(config.ALL_FEATURES) - feature_invariance
+    print('[!] Features used:', len(features), features)
     data = GetData(path_dataset=config.path_dataset,
                    label_feature_name=config.label,
                    driver_feature_name=config.driver,
                    features=features,
                    trips=None)  # get all trips
-    df = data.get_all(driver_target='A')
-
-    # Analyse
-    _, variance_df = analyse_variance(getx(df))
-    analyse_correlation(df=variance_df, correlate_threshold=.95)
-
-    delta = str(timedelta(seconds=(time.time() - program_time)))
-    print('\n[time]', delta)
+    df = data.get_all(driver_target='A')[features]
+    # Correlation
+    corr, inc, exc = analyse_correlation(df=df, correlate_threshold=.95)
+    plot_correlation(corr)
 
     plt.show()

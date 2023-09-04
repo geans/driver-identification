@@ -116,3 +116,5 @@ feature_variance = ['fuel_usage', 'accelerator_position', 'throttle_position', '
 
 
 
+# indiferente
+indifference = ['current_fire_timing', 'calculation_overhead', 'standard_torque_ratio', 'engine_torque_min', 'engine_torque_max', 'engine_torque_limit_tcu', 'torque_converter_turbin_speed', 'brake_switch', 'steering_wheel_angle', 'fuel_usage', 'inhale_pressure', 'cooling_temperature', 'torque_converter_speed', 'accelerator_position', 'wheel_velo_frontleft', 'steering_wheel_acceleration', 'engine_torque', 'current_gear', 'throttle_position', 'converter_clutch', 'reduce_block_fuel', 'car_speed', 'engine_idle_slippage', 'mission_oil_temp', 'wheel_velo_backleft', 'wheel_velo_frontright', 'throttle_position_abs', 'engine_torque_revised', 'road_slope', 'long_fuel_bank', 'engine_speed', 'friction_torque', 'block_fuel', 'engine_velocity_increase_tcu', 'short_fuel_bank', 'wheel_velo_backright', 'gear_choice']

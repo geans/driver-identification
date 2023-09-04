@@ -109,56 +109,90 @@ def get_metrics(model, X_train, y_train, X_test, y_test):
 
 
 def test_classifier(clf, data_size_fit):
+    def autolabel(rects, ax, vertical_pos=.5):
+        """
+        Attach a text label above each bar displaying its height
+        """
+        for rect in rects:
+            height = rect.get_height()
+            ax.text(rect.get_x() + rect.get_width() / 2., vertical_pos,
+                    f'{height:3.2}', fontsize=15,
+                    ha='center', va='bottom')
     mdebug('\n[Test-Zone]\n')
     TARGET = config.label
     DRIVER = config.driver
-    data_full = GetData(path_dataset='../../ThisCarIsMine',
+    path = '../../ThisCarIsMine'
+    path_normalized = '../../ThisCarIsMineNormalized'
+    data_full = GetData(path_dataset=path,
                         label_feature_name=config.label,
                         driver_feature_name=config.driver,
                         features=config.ALL_FEATURES,
                         trips=None)
 
-    data_to_fit = GetData(path_dataset='../../ThisCarIsMine',
-                        label_feature_name=config.label,
-                        driver_feature_name=config.driver,
+    data_to_fit = GetData(path_dataset=path,
+                          label_feature_name=config.label,
+                          driver_feature_name=config.driver,
+                          features=config.ALL_FEATURES,
                           trips=[1, 2, 3, 4])
 
-    data_to_test = GetData(path_dataset='../../ThisCarIsMine',
-                        label_feature_name=config.label,
-                        driver_feature_name=config.driver,
+    data_to_test = GetData(path_dataset=path,
+                           label_feature_name=config.label,
+                           driver_feature_name=config.driver,
+                           features=config.ALL_FEATURES,
                            trips=[5])
+
+    data_to_fit_normalized = GetData(path_dataset=path_normalized,
+                                     label_feature_name=config.label,
+                                     driver_feature_name=config.driver,
+                                     features=config.ALL_FEATURES,
+                                     trips=[1, 2, 3, 4])
+
+    data_to_test_normalized = GetData(path_dataset=path_normalized,
+                                      label_feature_name=config.label,
+                                      driver_feature_name=config.driver,
+                                      features=config.ALL_FEATURES,
+                                      trips=[5])
 
     # analyse data
     df = data_full.get_all().drop([TARGET, DRIVER], axis=1)
     invariance, variance_df = analyse_data.analyse_variance(df)
     corr, included, excluded = analyse_data.analyse_correlation(df=variance_df, correlate_threshold=.95)
 
+    included_inf = []
+    for feature in included:
+        included_inf.append(feature)
+        included_inf.append(f'{feature}_entropy')
+        included_inf.append(f'{feature}_complexity')
 
-    inf_handle = InformationHandle(label_feature_name=TARGET,
-                                   driver_feature_name=DRIVER,
-                                   dx=dx,
-                                   dy=dy,
-                                   taux=tx,
-                                   tauy=ty)
+    included += [TARGET, DRIVER]
+    included_inf += [TARGET, DRIVER]
 
-    for i in range(1):
-        for driver_target in ['A', 'B', 'C', 'D']:
-            df_fit = data_to_fit.get_sample(sample_size=data_size_fit,
-                                            driver_target=driver_target)[included + [TARGET, DRIVER]]
-            df_test = data_to_test.get_all(driver_target=driver_target)[included + [TARGET, DRIVER]]
+    y_lt_accuracy = []
+    y_inf_accuracy = []
+    y_both_accuracy = []
+    bar_width = 0.3
+    bottom_size = 0.3
+    font_size = 24
+    color1 = '#191970'
+    color2 = '#6495ed'
+    color3 = '#0000ff'
+
+    fig = plt.figure(figsize=(17, 9))
+    for _ in range(1):
+        for i, driver_target in enumerate(['A', 'B', 'C', 'D'], start=1):
+            df_fit = data_to_fit.get_sample_inf(sample_size=data_size_fit,
+                                                driver_target=driver_target)
+            df_test = data_to_test.get_all_inf(driver_target=driver_target)
+            df_fit_normalized = data_to_fit_normalized.get_sample_inf(sample_size=data_size_fit,
+                                                                      driver_target=driver_target)
+            df_test_normalized = data_to_test_normalized.get_all_inf(driver_target=driver_target)
 
             # Literature
-            pp = LiteraturePreprocessing(df_fit, TARGET, DRIVER)
-            pp.normalization()
-            pp.remove_miss_value()
-            df_pp2 = pp.get_df()
+            pp = LiteraturePreprocessing(df_fit_normalized[included], TARGET, DRIVER)
             pp.window()
             df_pp = pp.get_df()
             #
-            pp_test = LiteraturePreprocessing(df_test, TARGET, DRIVER)
-            pp_test.normalization()
-            pp_test.remove_miss_value()
-            df_pp2_test = pp_test.get_df()
+            pp_test = LiteraturePreprocessing(df_test_normalized[included], TARGET, DRIVER)
             pp_test.window()
             df_pp_test = pp_test.get_df()
 
@@ -170,8 +204,10 @@ def test_classifier(clf, data_size_fit):
             # Entropy-Complexty (HC)
             mdebug(f"Information-Teory.")
 
-            df_hc = inf_handle.get_information_binary_label(df_fit)
-            df_hc_test = inf_handle.get_information_binary_label(df_test)
+            # df_hc = inf_handle.get_information_binary_label(df_fit)
+            # df_hc_test = inf_handle.get_information_binary_label(df_test)
+            df_hc = df_fit[included_inf]
+            df_hc_test = df_test[included_inf]
 
             X_train, y_train = df_hc.drop([TARGET, DRIVER], axis=1), df_hc[TARGET]
             X_test, y_test = df_hc_test.drop([TARGET, DRIVER], axis=1), df_hc_test[TARGET]
@@ -180,27 +216,63 @@ def test_classifier(clf, data_size_fit):
             # Literature + Entropy-Complexty (HC)
             mdebug(f"Both.")
 
-            df_joined = inf_handle.get_information_binary_label(df_pp2)
-            df_joined_test = inf_handle.get_information_binary_label(df_pp2_test)
+            df_joined = df_fit_normalized[included_inf]
+            df_joined_test = df_test_normalized[included_inf]
 
             X_train, y_train = df_joined.drop([TARGET, DRIVER], axis=1), df_joined[TARGET]
             X_test, y_test = df_joined_test.drop([TARGET, DRIVER], axis=1), df_joined_test[TARGET]
             accuracy_both = get_metrics(clf, X_train, y_train, X_test, y_test)
 
-            bar_width = 0.3
-            X_axis = np.arange(3)
-            fig, ax = plt.subplots(1, 1, figsize=(17, 9))
-            ax.bar(X_axis - bar_width, [accuracy_lt, accuracy_inf, accuracy_both])
-            ax.bar(X_axis, accuracy_inf)
-            ax.bar(X_axis + bar_width, accuracy_both)
+            y_lt_accuracy.append(accuracy_lt)
+            y_inf_accuracy.append(accuracy_inf)
+            y_both_accuracy.append(accuracy_both)
+
+            X_axis = np.arange(1)
+            ax = plt.subplot(2, 3, i)
+            # ax.set_ylabel("Accuracy", fontsize=font_size)
+            ax.set_ylim([0.5, 1.05])
+            bar_lt = ax.bar(X_axis - bar_width, accuracy_lt, bar_width, label='Literature', color=color1)
+            bar_inf = ax.bar(X_axis, accuracy_inf, bar_width, label='Information', color=color2)
+            bar_both = ax.bar(X_axis + bar_width, accuracy_both, bar_width, label='Literature + Information', color=color3)
+            autolabel(bar_lt, ax)
+            autolabel(bar_inf, ax)
+            autolabel(bar_both, ax)
+            # ax.legend(loc='upper center', bbox_to_anchor=(0.5, -bottom_size),
+            #           fancybox=True, shadow=True, ncol=3, fontsize=font_size)
+            ax.set_title(f'Owner driver: {driver_target}')
+    # fig.subplots_adjust(bottom=bottom_size)
+    # plt.legend(loc='upper center', bbox_to_anchor=(0.5, -bottom_size),
+    #            fancybox=True, shadow=True, ncol=3, fontsize=font_size)
+
+    X_axis = np.arange(1)
+    # fig, ax = plt.subplots(1, 1, figsize=(17, 9))
+    ax = plt.subplot(2, 3, 5)
+    # ax.set_ylabel("Accuracy", fontsize=font_size)
+    ax.set_ylim([0.5, 1.05])
+    bar_lt = ax.bar(X_axis - bar_width, mean(y_lt_accuracy), bar_width, label='Literature', yerr=sem(y_lt_accuracy),
+                    color=color1)
+    bar_inf = ax.bar(X_axis, mean(y_inf_accuracy), bar_width, label='Information', yerr=sem(y_inf_accuracy),
+                     color=color2)
+    bar_both = ax.bar(X_axis + bar_width, mean(y_both_accuracy), bar_width,
+                      label='Literature + Information',
+                      yerr=sem(y_both_accuracy), color=color3)
+    autolabel(bar_lt, ax)
+    autolabel(bar_inf, ax)
+    autolabel(bar_both, ax)
+    # ax.legend(loc='upper center', bbox_to_anchor=(0.5, -bottom_size),
+    #           fancybox=True, shadow=True, ncol=3, fontsize=font_size)
+    ax.set_title(f'Owner driver mean')
+    fig.subplots_adjust(bottom=bottom_size)
+    plt.legend(loc='upper center', bbox_to_anchor=(0.5, -bottom_size),
+               fancybox=True, shadow=True, ncol=3, fontsize=font_size)
 
     mdebug('\n[End-Test-Zone]\n')
 
 
 if __name__ == '__main__':
-    # test_classifier(SVC(gamma=.9, C=1), 50)
-    # plt.show()
-    # exit()
+    test_classifier(SVC(gamma=.9, C=1), 1500)
+    plt.show()
+    exit()
 
     program_time = time.time()
     time_literature = {}

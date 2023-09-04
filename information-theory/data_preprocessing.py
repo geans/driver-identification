@@ -87,56 +87,40 @@ class InformationPreprocessing:
         self.__df = df.loc[(df.shift(-1) != df).any(axis=1)]
 
 
-class InfSeries:
-    def __init__(self, serie, window_length=None, shift=1):
-        # TODO: preprocess serie to optmize information theory
-        self.__serie = serie
-        self.__window_length = window_length
-        self.__shift = shift
-        self.__entropy = []
-        self.__complexity = []
-        self.__fisher = []
-        self.__shannon = []
-        self.__computer_inf()
+def process_file(path, driver, num_files):
+    def run(df, fileout):
+        x = df.values  # returns a numpy array
+        min_max_scaler = preprocessing.MinMaxScaler()
+        x_scaled = min_max_scaler.fit_transform(x)
+        new_df = pd.DataFrame(x_scaled, columns=df.columns)
+        new_df.to_csv(fileout, index=False)
 
-    def to_row(self):
-        return ','.join([
-            str(np.mean(self.__entropy)),
-            str(np.std(self.__entropy)),
-            str(np.mean(self.__complexity)),
-            str(np.std(self.__complexity)),
-            str(np.mean(self.__fisher)),
-            str(np.std(self.__fisher)),
-            str(np.mean(self.__shannon)),
-            str(np.std(self.__shannon)),
-        ])
+    threads = []
+    for i in range(1, num_files + 1, 1):
+        filein = f'{path}/{driver}/All_{i}.csv'
+        fileout = f'{path}Normalized/{driver}/All_{i}.csv'
+        df = pd.read_csv(filein)
+        p = multiprocessing.Process(target=run,
+                                    args=(df, fileout))
+        p.start()
+        threads.append(p)
+    return threads
 
-    def __computer_inf(self):
-        '''Computer Information Theory measures:
-        - Entropy
-        - Statistical Complexity
-        - Fisher Entropy
-        - Shannon Entropy'''
-        if self.__window_length is None:
-            self.__window_length = len(self.__serie)
-        for window in self.__get_sub_lists():
-            # TODO: to parallel
-            h, c = ordpy.complexity_entropy(window, dx=3)
-            f, s = ordpy.fisher_shannon(window, dx=3)
-            self.__add(h, c, f, s)
 
-    def __get_sub_lists(self):
-        '''Separates the series into windows and returns a list of those windows.'''
-        start = 0
-        sub_lists = []
-        len_list = len(self.__serie)
-        while start + self.__window_length <= len_list:
-            sub_lists.append(self.__serie[start: start + self.__window_length])
-            start += self.__shift
-        return sub_lists
+def normalize_dataset():
+    path = '../../ThisCarIsMine'
+    thread_pool = process_file(path, 'A', 8)
+    thread_pool += process_file(path, 'B', 8)
+    thread_pool += process_file(path, 'C', 5)
+    thread_pool += process_file(path, 'D', 9)
 
-    def __add(self, entropy, complexity, fisher, shannon):
-        self.__entropy.append(entropy)
-        self.__complexity.append(complexity)
-        self.__fisher.append(fisher)
-        self.__shannon.append(shannon)
+    len_pool = len(thread_pool)
+    print(len_pool)
+
+    for i, thread in enumerate(thread_pool, start=1):
+        thread.join()
+        print(f'{i}/{len_pool}')
+
+
+if __name__ == '__main__':
+    normalize_dataset()
