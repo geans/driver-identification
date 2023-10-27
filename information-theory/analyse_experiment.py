@@ -5,11 +5,12 @@ import time
 import pandas as pd
 import sklearn
 from sklearn import metrics
+from sklearn.metrics import accuracy_score, confusion_matrix, ConfusionMatrixDisplay
 
 import config
 from numpy import mean
 from scipy.stats import sem
-from sklearn.model_selection import cross_validate
+from sklearn.model_selection import cross_validate, cross_val_predict
 from sklearn.neural_network import MLPClassifier
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.svm import SVC
@@ -49,14 +50,14 @@ f_without_na = ['calculation_overhead_entropy', 'calculation_overhead_complexity
                 'engine_speed_entropy', 'engine_speed_complexity']
 
 
-def plot_experiment(score_lit, fit_time_lit, score_inf, fit_time_inf, ylim=(0.5, 1.05)):
+def plot_experiment(score_lit, fit_time_lit, score_inf, fit_time_inf, ylim=(0.5, 1.05), fig_name='', path=None):
     color1 = '#98c1d9'
     color2 = '#6495ed'
     font_size = 24
     bottom_size = 0.3
     X_axis = np.arange(len(classifier_names))
 
-    plt.figure('Time', figsize=(17, 9))
+    plt.figure('Time. '+fig_name, figsize=(17, 9))
     plt.bar(X_axis - 0.2, [mean(value) for value in fit_time_lit.values()], 0.4,
             yerr=[sem(value) for value in fit_time_lit.values()], label='Literature', color=color1)
     plt.bar(X_axis + 0.2, [mean(value) for value in fit_time_inf.values()], 0.4,
@@ -67,8 +68,10 @@ def plot_experiment(score_lit, fit_time_lit, score_inf, fit_time_inf, ylim=(0.5,
     plt.subplots_adjust(bottom=bottom_size)
     plt.tick_params(axis='both', which='major', labelsize=font_size)
     plt.tick_params(axis='x', labelrotation=45)
+    if path is not None:
+        plt.savefig(f'{path}/time_results.png')
 
-    plt.figure('Score', figsize=(17, 9))
+    plt.figure('Score. '+fig_name, figsize=(17, 9))
     x_lit_score = [mean(value) for value in score_lit.values()]
     x_inf_score = [mean(value) for value in score_inf.values()]
     print('Literature', min(x_lit_score), max(x_lit_score))
@@ -84,20 +87,23 @@ def plot_experiment(score_lit, fit_time_lit, score_inf, fit_time_inf, ylim=(0.5,
     plt.subplots_adjust(bottom=bottom_size)
     plt.tick_params(axis='both', which='major', labelsize=font_size)
     plt.tick_params(axis='x', labelrotation=45)
+    if path is not None:
+        plt.savefig(f'{path}/score_results.png')
 
-    plt.show()
 
-
-def plot_roc(y_test_lit, y_prediction_lit, y_test_inf, y_prediction_inf):
+def plot_roc(y_test_lit, y_pred_lit, y_test_inf, y_pred_inf, fig_name='', path=None):
     color1 = '#98c1d9'
     color2 = '#6495ed'
-    fpr_lit, tpr_lit, threshold_lit = metrics.roc_curve(y_test_lit, y_prediction_lit)
+    y_min = min(len(y_test_lit), len(y_pred_lit), len(y_test_inf), len(y_pred_inf))
+    y_test_lit, y_pred_lit = y_test_lit[:y_min], y_pred_lit[:y_min]
+    y_test_inf, y_pred_inf = y_test_inf[:y_min], y_pred_inf[:y_min]
+    fpr_lit, tpr_lit, threshold_lit = metrics.roc_curve(y_test_lit, y_pred_lit)
     roc_auc_lit = metrics.auc(fpr_lit, tpr_lit)
-    fpr_inf, tpr_inf, threshold_inf = metrics.roc_curve(y_test_inf, y_prediction_inf)
+    fpr_inf, tpr_inf, threshold_inf = metrics.roc_curve(y_test_inf, y_pred_inf)
     roc_auc_inf = metrics.auc(fpr_inf, tpr_inf)
 
     # method I: plt
-    plt.figure('Receiver Operating Characteristic')
+    plt.figure('ROC Curve. ' + fig_name)
     plt.plot(fpr_lit, tpr_lit, 'b', label=f'Literature, AUC = {roc_auc_lit:0.2f}', color=color1)
     plt.plot(fpr_inf, tpr_inf, 'b', label=f'Proposal, AUC = {roc_auc_inf:0.2f}', color=color2)
     plt.legend(loc='lower right')
@@ -106,15 +112,23 @@ def plot_roc(y_test_lit, y_prediction_lit, y_test_inf, y_prediction_inf):
     plt.ylim([0, 1])
     plt.ylabel('True Positive Rate')
     plt.xlabel('False Positive Rate')
-    plt.show()
+    if path is not None:
+        plt.savefig(f'{path}/ROC_{fig_name}.png')
+    # plt.show()
 
 
 def experiment_1_measure(window_size, k_fold, path, feature):
     def classifier_handle():
         try:
-            result_dict = cross_validate(clf, X, y, cv=k_fold, return_estimator=True, return_train_score=True)
-            score[clf_name] = score.get(clf_name, []) + result_dict['test_score'].tolist()
-            fit_time[clf_name] = fit_time.get(clf_name, []) + result_dict['fit_time'].tolist()
+            # result_dict = cross_validate(clf, X, y, cv=k_fold, return_estimator=True, return_train_score=True)
+            # score[clf_name] = score.get(clf_name, []) + result_dict['test_score'].tolist()
+            # fit_time[clf_name] = fit_time.get(clf_name, []) + result_dict['fit_time'].tolist()
+            t0 = time.time()
+            y_pred = cross_val_predict(clf, X, y, cv=k_fold)
+            fit_time[clf_name] = fit_time.get(clf_name, []) + [time.time() - t0]
+            y_dict[clf_name] = y_dict.get(clf_name, []) + y.tolist()
+            y_pred_dict[clf_name] = y_pred_dict.get(clf_name, []) + y_pred.tolist()
+            score[clf_name] = score.get(clf_name, []) + [accuracy_score(y, y_pred)]
         except Exception as e:
             print('Error in "classifier_handle".', e)
 
@@ -123,9 +137,9 @@ def experiment_1_measure(window_size, k_fold, path, feature):
     df_arr = []
     limit = 99999
     for i, driver in enumerate('ABCD'):
-        df_arr += [pd.read_csv(f'{path}/{driver}/All_1.csv')]
+        df_arr += [pd.read_csv(f'{path}/{driver}/All_1.csv')[feature].dropna()]
         limit = min(limit, df_arr[i].shape[0])
-    limit = 300
+    limit = 150
     print('limit =', limit)
     for i, driver in enumerate('ABCD'):
         df_arr[i] = df_arr[i][:limit]
@@ -133,6 +147,8 @@ def experiment_1_measure(window_size, k_fold, path, feature):
     manager = multiprocessing.Manager()
     score = manager.dict()
     fit_time = manager.dict()
+    y_dict = manager.dict()
+    y_pred_dict = manager.dict()
     # Split dataset into windows
     sliding_window = [pd.concat(
         [df_arr[0][i:i + window_size], df_arr[1][i:i + window_size], df_arr[2][i:i + window_size],
@@ -142,8 +158,8 @@ def experiment_1_measure(window_size, k_fold, path, feature):
     counter = 0
     # Process each window
     for window in sliding_window:
-        X = window.drop([class_feat], axis=1)[feature]
-        X = X.dropna(axis=1)
+        X = window.drop([class_feat], axis=1)
+        # X = X.dropna(axis=1)
         running_process = []
         for clf, clf_name in zip(classifiers, classifier_names):
             for driver in 'ABCD':
@@ -157,7 +173,7 @@ def experiment_1_measure(window_size, k_fold, path, feature):
             p.join()
             counter += 1
             print(f'{counter}/{total_process}')
-    return score, fit_time
+    return score.copy(), fit_time.copy(), y_dict.copy(), y_pred_dict.copy()
 
 
 def experiment_2_measure(path, feature):
@@ -167,7 +183,7 @@ def experiment_2_measure(path, feature):
             clf.fit(X_train, y_train)
             fit_time[clf_name] = fit_time.get(clf_name, []) + [time.time() - t0]
             y_prediction = clf.predict(X_test)
-            score_value = sklearn.metrics.accuracy_score(y_prediction, y_test)
+            score_value = accuracy_score(y_prediction, y_test)
             score[clf_name] = score.get(clf_name, []) + [score_value]
             y_test_arr += y_test.tolist()
             y_prediction_arr += y_prediction.tolist()
@@ -289,14 +305,22 @@ def experiment_sample_size_measure(path, feature):
 
 
 def experiment_3_measure(path, feature):
-    def classifier_handle():
+    def classifier_handle(y_test_arr, y_prediction_arr):
         try:
+            # t0 = time.time()
+            # clf.fit(X_train, y_train)
+            # fit_time[clf_name] = fit_time.get(clf_name, []) + [time.time() - t0]
+            # y_pred = clf.predict(X_test)
+            # score_value = sklearn.metrics.accuracy_score(y_pred, y_test)
+            # score[clf_name] = score.get(clf_name, []) + [score_value]
             t0 = time.time()
             clf.fit(X_train, y_train)
             fit_time[clf_name] = fit_time.get(clf_name, []) + [time.time() - t0]
             y_pred = clf.predict(X_test)
-            score_value = sklearn.metrics.accuracy_score(y_pred, y_test)
+            score_value = accuracy_score(y_pred, y_test)
             score[clf_name] = score.get(clf_name, []) + [score_value]
+            y_test_arr += y_test.tolist()
+            y_prediction_arr += y_pred.tolist()
         except Exception as e:
             print('Error in "classifier_handle".', e)
 
@@ -305,17 +329,20 @@ def experiment_3_measure(path, feature):
     df_arr = []
     df_test_arr = []
     for i, driver in enumerate('ABCD'):
-        df_arr += [pd.read_csv(f'{path}/{driver}/All_1.csv')[feature].dropna()]
+        df_arr += [pd.read_csv(f'{path}/{driver}/All_1.csv')[feature].dropna()[:200]]
         df_test_arr += [pd.concat([pd.read_csv(f'{path}/{driver}/All_2.csv')[feature].dropna(),
-                                   pd.read_csv(f'{path}/{driver}/All_3.csv')[feature].dropna(),
-                                   pd.read_csv(f'{path}/{driver}/All_4.csv')[feature].dropna(),
-                                   pd.read_csv(f'{path}/{driver}/All_5.csv')[feature].dropna()])]
+                                   # pd.read_csv(f'{path}/{driver}/All_3.csv')[feature].dropna(),
+                                   # pd.read_csv(f'{path}/{driver}/All_4.csv')[feature].dropna(),
+                                   # pd.read_csv(f'{path}/{driver}/All_5.csv')[feature].dropna()
+                                   ])]
     for i, driver in enumerate('ABCD'):
         df_arr[i][class_feat] = [driver] * df_arr[i].shape[0]
         df_test_arr[i][class_feat] = [driver] * df_test_arr[i].shape[0]
     manager = multiprocessing.Manager()
     score = manager.dict()
     fit_time = manager.dict()
+    y_test_arr = manager.list()
+    y_prediction_arr = manager.list()
     counter = 0
     # Train data
     df = pd.concat(df_arr)
@@ -332,30 +359,46 @@ def experiment_3_measure(path, feature):
         y_train = df[class_feat]
         y_test = df_test[class_feat]
         p = multiprocessing.Process(target=classifier_handle,
-                                    args=())
+                                    args=(y_test_arr, y_prediction_arr))
         p.start()
         running_process.append(p)
     for p in running_process:
         p.join()
         counter += 1
         print(f'{counter}/{total_process}')
-    return score, fit_time
+    return score.copy(), fit_time.copy(), list(y_test_arr), list(y_prediction_arr)
 
 
 def experiment_1():
-    print('Running experiment 1')
-    score_lit, fit_time_lit = experiment_1_measure(120, 5, '../../ThisCarIsMine', config.feature_lit)
-    score_inf, fit_time_inf = experiment_1_measure(120, 5, '../../ThisCarIsMineInf_window300_dx6', config.feature_inf)
-    with open('analyse_experiment_1.out_values.txt', 'w') as out:
-        json.dump([score_lit.copy(), fit_time_lit.copy(), score_inf.copy(), fit_time_inf.copy()], out)
+    experiment_name = 'Experiment 1'
+    print('Running', experiment_name)
+
+    # data_inf = experiment_1_measure(120, 5, '../../ThisCarIsMineInf', config.feature_inf)
+    # data_lit = experiment_1_measure(120, 5, '../../ThisCarIsMine', config.feature_lit)
+    # with open('analyse_experiment_1.out_values.txt', 'w') as out:
+    #     json.dump((data_lit, data_inf), out)
 
     with open('analyse_experiment_1.out_values.txt', 'r') as data_file:
-        data = json.load(data_file)
-        plot_experiment(*data)
+        data_lit, data_inf = json.load(data_file)
+        score_lit, fit_time_lit, y_lit, y_pred_lit = data_lit
+        score_inf, fit_time_inf, y_inf, y_pred_inf = data_inf
+        path_to_save = './results/experiment_1'
+        plot_experiment(score_lit, fit_time_lit, score_inf, fit_time_inf, fig_name=experiment_name, path=path_to_save)
+        for clf_name in classifier_names:
+            # ROC curve
+            plot_roc(y_lit[clf_name], y_pred_lit[clf_name],
+                     y_inf[clf_name], y_pred_inf[clf_name],
+                     f'{clf_name}', path_to_save)
+            # Plot Confusion Matrix
+            disp = ConfusionMatrixDisplay.from_predictions(y_lit[clf_name], y_pred_lit[clf_name], cmap=plt.cm.Blues)
+            disp.figure_.savefig(f'{path_to_save}/Confusion_Matrix_{clf_name}_Literature.png')
+            disp = ConfusionMatrixDisplay.from_predictions(y_inf[clf_name], y_pred_inf[clf_name], cmap=plt.cm.Blues)
+            disp.figure_.savefig(f'{path_to_save}/Confusion_Matrix_{clf_name}_Proposal.png')
 
 
 def experiment_2():
-    print('Running experiment 2')
+    experiment_name = 'Experiment 2'
+    print('Running', experiment_name)
     data_lit = experiment_2_measure('../../ThisCarIsMineInf', config.feature_lit)
     data_inf = experiment_2_measure('../../ThisCarIsMineInf', config.feature_inf)
     with open('analyse_experiment_2.out_values.txt', 'w') as out:
@@ -363,12 +406,12 @@ def experiment_2():
 
     with open('analyse_experiment_2.out_values.txt', 'r') as data_file:
         data_lit, data_inf = json.load(data_file)
-        score_lit, fit_time_lit, y_test_arr_lit, y_prediction_arr_lit = data_lit
-        score_inf, fit_time_inf, y_test_arr_inf, y_prediction_arr_inf = data_inf
+        score_lit, fit_time_lit, y_lit, y_pred_lit = data_lit
+        score_inf, fit_time_inf, y_inf, y_pred_inf = data_inf
         # Plot bars
-        plot_experiment(score_lit, fit_time_lit, score_inf, fit_time_inf)
+        plot_experiment(score_lit, fit_time_lit, score_inf, fit_time_inf, fig_name=experiment_name)
         # Plot roc
-        plot_roc(y_test_arr_lit, y_prediction_arr_lit, y_test_arr_inf, y_prediction_arr_inf)
+        plot_roc(y_lit, y_pred_lit, y_inf, y_pred_inf, fig_name=experiment_name)
 
 
 def experiment_sample_size():
@@ -417,19 +460,36 @@ def experiment_sample_size():
 
 
 def experiment_3():
-    print('Running experiment 3')
+    experiment_name = 'Experiment 3'
+    print('Running', experiment_name)
+    # data_lit = experiment_3_measure('../../ThisCarIsMineInf', config.feature_lit)
+    # data_inf = experiment_3_measure('../../ThisCarIsMineInf', config.feature_inf)
+    # with open('analyse_experiment_3.out_values.txt', 'w') as out:
+    #     json.dump((data_lit, data_inf), out)
+
     # score_lit, fit_time_lit = experiment_3_measure('../../ThisCarIsMineInf', config.feature_lit)
     # score_inf, fit_time_inf = experiment_3_measure('../../ThisCarIsMineInf', config.feature_inf)
     # with open('analyse_experiment_3.out_values.txt', 'w') as out:
     #     json.dump([score_lit.copy(), fit_time_lit.copy(), score_inf.copy(), fit_time_inf.copy()], out)
 
     with open('analyse_experiment_3.out_values.txt', 'r') as data_file:
-        data = json.load(data_file)
-        plot_experiment(*data, ylim=(0.0, 0.55))
+        # data = json.load(data_file)
+        # plot_experiment(*data, ylim=(0.0, 0.55), fig_name='Experiment 3')
+        data_lit, data_inf = json.load(data_file)
+        score_lit, fit_time_lit, y_lit, y_pred_lit = data_lit
+        score_inf, fit_time_inf, y_inf, y_pred_inf = data_inf
+        # Plot bars
+        plot_experiment(score_lit, fit_time_lit, score_inf, fit_time_inf, ylim=(0.0, .55), fig_name=experiment_name)
+        # Plot
+        disp = ConfusionMatrixDisplay.from_predictions(y_lit, y_pred_lit, cmap=plt.cm.Blues)
+        disp.ax_.set_title('Confusion Matrix - Literature')
+        disp = ConfusionMatrixDisplay.from_predictions(y_inf, y_pred_inf, cmap=plt.cm.Blues)
+        disp.ax_.set_title('Confusion Matrix - Proposal')
 
 
 if __name__ == '__main__':
-    # experiment_1()
-    experiment_2()
+    experiment_1()
+    # experiment_2()
     # experiment_3()
     # experiment_sample_size()
+    # plt.show()
