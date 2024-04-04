@@ -211,3 +211,4 @@ if __name__ == '__main__':
                         y_inf_totaltime, y_inf_std_error_totaltime,
                         y_both_totaltime, y_both_std_error_totaltime)
     plt.show()
+

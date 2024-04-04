@@ -1,4 +1,5 @@
 import multiprocessing
+import os.path
 import time
 
 import numpy as np
@@ -101,7 +102,7 @@ class InformationHandle:
 
 
 class InformationHandleFile:
-    def __init__(self, path, path_out,  window, shift=1, dx=6):
+    def __init__(self, path, path_out, window, shift=1, dx=6):
         self.__window = window
         self.__shift = shift
         self.__dx = dx
@@ -147,29 +148,33 @@ class InformationHandleFile:
                     f, s = ordpy.fisher_shannon(window_without_duplicate, dx=dx)
                     tf = time.time()
                     time_fs.append(tf - t0)
-                # row[feature] = window_df[feature].values[-1]
-        #         row[f'{feature}_entropy'] = h
-        #         row[f'{feature}_complexity'] = c
-        #         row[f'{feature}_fisher'] = f
-        #         row[f'{feature}_shannon'] = s
-        #     if new_df is None:
-        #         new_df = pd.DataFrame([row])
-        #     else:
-        #         new_df.loc[new_df_sz] = row
-        #     new_df_sz += 1
-        # new_df.to_csv(fileout, index=False)
+                row[feature] = window_df[feature].values[-1]
+                row[f'{feature}_entropy'] = h
+                row[f'{feature}_complexity'] = c
+                row[f'{feature}_fisher'] = f
+                row[f'{feature}_shannon'] = s
+            if new_df is None:
+                new_df = pd.DataFrame([row])
+            else:
+                new_df.loc[new_df_sz] = row
+            new_df_sz += 1
+        new_df.to_csv(fileout, index=False)
         time_dict = {
             'time_hc': time_hc,
             'time_fs': time_fs
         }
         time_df = pd.DataFrame.from_dict(time_dict)
-        time_df.to_csv(fileout+'.time', index=False)
+        time_df.to_csv(fileout + '.time', index=False)
 
     def __process_file(self, driver, num_files):
         threads = []
-        for i in range(1, num_files+1, 1):
+        for i in range(1, num_files + 1, 1):
             filein = f'{self.__path}/{driver}/All_{i}.csv'
-            fileout = f'{self.__path_out}/{driver}/All_{i}.csv'
+            driver_directory = f'{self.__path_out}/{driver}'
+            if not os.path.exists(driver_directory):
+                os.mkdir(driver_directory)
+                print('Created', driver_directory)
+            fileout = f'{driver_directory}/All_{i}.csv'
             df = pd.read_csv(filein)
             p = multiprocessing.Process(target=self.__run,
                                         args=(df, fileout, self.__window, self.__dx))
@@ -191,40 +196,62 @@ class InformationHandleFile:
             print(f'{i}/{len_pool}')
 
 
+def choose_embedded_dimension(series_length):
+    if series_length <= 120:
+        return 5
+    if series_length <= 720:
+        return 6
+    if series_length <= 5040:
+        return 7
+    return 8
+
+
 if __name__ == '__main__':
-    path_in = '../../ThisCarIsMine'
+    path_in = './ThisCarIsMine'
     #
-    path_out = '../../ThisCarIsMineInf_window20_dx4'
-    InformationHandleFile(path=path_in,
-                          path_out=path_out,
-                          window=20,
-                          dx=4
-                          ).create_inf_measures_dataset()
-    #
-    path_out = '../../ThisCarIsMineInf_window120_dx5'
-    InformationHandleFile(path=path_in,
-                          path_out=path_out,
-                          window=120,
-                          dx=5
-                          ).create_inf_measures_dataset()
-    #
-    path_out = '../../ThisCarIsMineInf_window300_dx6'
-    InformationHandleFile(path=path_in,
-                          path_out=path_out,
-                          window=300,
-                          dx=6
-                          ).create_inf_measures_dataset()
-    #
-    path_out = '../../ThisCarIsMineInf_window720_dx6'
-    InformationHandleFile(path=path_in,
-                          path_out=path_out,
-                          window=720,
-                          dx=6
-                          ).create_inf_measures_dataset()
-    #
-    path_out = '../../ThisCarIsMineInf_window900_dx7'
-    InformationHandleFile(path=path_in,
-                          path_out=path_out,
-                          window=900,
-                          dx=7
-                          ).create_inf_measures_dataset()
+    for series_length in range(60, 901, 60):
+        if series_length not in [120, 300, 720, 900]:
+            d = choose_embedded_dimension(series_length)
+            path_out = f'./ThisCarIsMineInf_window{series_length}_dx{d}'
+            print(path_out)
+            if not os.path.exists(path_out):
+                os.mkdir(path_out)
+            InformationHandleFile(path=path_in,
+                                  path_out=path_out,
+                                  window=series_length,
+                                  dx=d
+                                  ).create_inf_measures_dataset()
+    # path_out = './ThisCarIsMineInf_window20_dx4'
+    # InformationHandleFile(path=path_in,
+    #                       path_out=path_out,
+    #                       window=20,
+    #                       dx=4
+    #                       ).create_inf_measures_dataset()
+    # #
+    # path_out = './ThisCarIsMineInf_window120_dx5'
+    # InformationHandleFile(path=path_in,
+    #                       path_out=path_out,
+    #                       window=120,
+    #                       dx=5
+    #                       ).create_inf_measures_dataset()
+    # #
+    # path_out = './ThisCarIsMineInf_window300_dx6'
+    # InformationHandleFile(path=path_in,
+    #                       path_out=path_out,
+    #                       window=300,
+    #                       dx=6
+    #                       ).create_inf_measures_dataset()
+    # #
+    # path_out = './ThisCarIsMineInf_window720_dx6'
+    # InformationHandleFile(path=path_in,
+    #                       path_out=path_out,
+    #                       window=720,
+    #                       dx=6
+    #                       ).create_inf_measures_dataset()
+    # #
+    # path_out = './ThisCarIsMineInf_window900_dx7'
+    # InformationHandleFile(path=path_in,
+    #                       path_out=path_out,
+    #                       window=900,
+    #                       dx=7
+    #                       ).create_inf_measures_dataset()

@@ -123,7 +123,8 @@ def plot_roc(y_test_lit, y_pred_lit, y_test_inf, y_pred_inf, fig_name='', path=N
 def plot_experiment_4bars(score_lit, score_inf_hc, score_inf_fs, score_inf_hcfs, score_name, ylim=(0.5, 1.05),
                           fig_name='', path=None):
     font_size = 24
-    bottom_size = 0.4
+    legend_font_size = 18
+    bottom_size = 0.27
     X_axis = np.arange(len(classifier_names))
     bar_width = 0.2
 
@@ -142,21 +143,33 @@ def plot_experiment_4bars(score_lit, score_inf_hc, score_inf_fs, score_inf_hcfs,
             label='Literature', color=color1, edgecolor="black")
     plt.bar(X_axis - 0.1, x_inf_hc_score, bar_width,
             yerr=[sem(value) for value in score_inf_hc.values()],
-            label='Proposal HC', color=color2, edgecolor="black")
+            label='$\mathcal{H}\mathcal{C}$', color=color2, edgecolor="black")
     plt.bar(X_axis + 0.1, x_inf_hc_score, bar_width,
             yerr=[sem(value) for value in score_inf_fs.values()],
-            label='Proposal FS', color=color3, edgecolor="black")
+            label='$FS$', color=color3, edgecolor="black")
     plt.bar(X_axis + 0.3, x_inf_hc_fs_score, bar_width,
             yerr=[sem(value) for value in score_inf_hcfs.values()],
-            label='Proposal HC+FS', color=color4, edgecolor="black")
+            label='$\mathcal{H}\mathcal{C}+FS$', color=color4, edgecolor="black")
     plt.ylim(ylim)
     plt.ylabel(f'{score_name} Score', fontsize=font_size)
     plt.xticks(X_axis, classifier_names)
-    plt.legend(loc='upper center', bbox_to_anchor=(0.5, -bottom_size),
-               fancybox=True, shadow=True, ncol=3, fontsize=font_size)
+    plt.legend(loc='upper center', bbox_to_anchor=(0.5, 1.22),
+               fancybox=True, shadow=True, ncol=2, fontsize=legend_font_size)
     plt.subplots_adjust(bottom=bottom_size)
+    # plt.legend(bbox_to_anchor=(1, .75),
+    #            fancybox=True, shadow=True, ncol=1, fontsize=legend_font_size)
+    # plt.subplots_adjust(right=.75, bottom=.3)
     plt.tick_params(axis='both', which='major', labelsize=font_size)
     plt.tick_params(axis='x', labelrotation=45)
+
+    plt.grid(axis='y')
+    major_ticks = np.arange(.5, 1.01, .1)
+    minor_ticks = np.arange(.5, 1.01, .05)
+    plt.yticks(major_ticks)
+    plt.yticks(minor_ticks, minor=True)
+    plt.grid(which='minor', alpha=0.4)
+    plt.grid(which='major', alpha=0.8)
+
     if path is not None:
         plt.savefig(f'{path}/{score_name}_score_results.png')
 
@@ -164,7 +177,8 @@ def plot_experiment_4bars(score_lit, score_inf_hc, score_inf_fs, score_inf_hcfs,
 def plot_roc_auc_dict_4bars(roc_auc_lit, roc_auc_inf_hc, roc_auc_inf_fs, roc_auc_inf_hc_fs, ylim=(0.5, 1.05),
                             path=None):
     font_size = 24
-    bottom_size = 0.4
+    legend_font_size = 18
+    bottom_size = 0.27
     X_axis = np.arange(len(classifier_names))
     bar_width = 0.2
 
@@ -183,74 +197,33 @@ def plot_roc_auc_dict_4bars(roc_auc_lit, roc_auc_inf_hc, roc_auc_inf_fs, roc_auc
     my_debug('Proposal FS', min(x_inf_fs), max(x_inf_fs))
     my_debug('Proposal HC + FS', min(x_inf_hc_fs), max(x_inf_hc_fs))
     plt.bar(X_axis - 0.3, x_lit, bar_width, yerr=lit_err, label='Literature', color=color1, edgecolor="black")
-    plt.bar(X_axis - 0.1, x_inf_hc, bar_width, yerr=inf_err_hc, label='HC', color=color2, edgecolor="black")
-    plt.bar(X_axis + 0.1, x_inf_fs, bar_width, yerr=inf_err_fs, label='FS', color=color3, edgecolor="black")
-    plt.bar(X_axis + 0.3, x_inf_hc_fs, bar_width, yerr=inf_err_hc_fs, label='HC+FS', color=color4, edgecolor="black")
+    plt.bar(X_axis - 0.1, x_inf_hc, bar_width, yerr=inf_err_hc, label='$\mathcal{H}\mathcal{C}$', color=color2, edgecolor="black")
+    plt.bar(X_axis + 0.1, x_inf_fs, bar_width, yerr=inf_err_fs, label='$FS$', color=color3, edgecolor="black")
+    plt.bar(X_axis + 0.3, x_inf_hc_fs, bar_width, yerr=inf_err_hc_fs, label='$\mathcal{H}\mathcal{C}+FS$', color=color4, edgecolor="black")
     plt.ylim(ylim)
     plt.ylabel('ROC AUC', fontsize=font_size)
     plt.xticks(X_axis, classifier_names)
-    plt.legend(loc='upper center', bbox_to_anchor=(0.5, -bottom_size),
-               fancybox=True, shadow=True, ncol=3, fontsize=font_size)
+    plt.legend(loc='upper center', bbox_to_anchor=(0.5, 1.22),
+               fancybox=True, shadow=True, ncol=2, fontsize=legend_font_size)
     plt.subplots_adjust(bottom=bottom_size)
     plt.tick_params(axis='both', which='major', labelsize=font_size)
     plt.tick_params(axis='x', labelrotation=45)
+
+    plt.grid(axis='y')
+    major_ticks = np.arange(.5, 1.01, .1)
+    minor_ticks = np.arange(.5, 1.01, .05)
+    plt.yticks(major_ticks)
+    plt.yticks(minor_ticks, minor=True)
+    plt.grid(which='minor', alpha=0.4)
+    plt.grid(which='major', alpha=0.8)
+
     if path is not None:
         plt.savefig(f'{path}/roc_auc_mean.png')
 
 
-# def plot_experiment_from_pred(y_lit, y_pred_lit, y_inf, y_pred_inf, ylim=(0.5, 1.05), path=None):
-#     score_lit, score_inf = {}, {}
-#     for clf_name in classifier_names:
-#         score_lit[clf_name] = metrics.accuracy_score(y_lit[clf_name], y_pred_lit[clf_name])
-#         score_inf[clf_name] = metrics.accuracy_score(y_inf[clf_name], y_pred_inf[clf_name])
-#     font_size = 24
-#     bottom_size = 0.3
-#     X_axis = np.arange(len(classifier_names))
-#
-#     plt.figure('Score', figsize=(17, 9))
-#     x_lit_score = score_lit.values()
-#     x_inf_score = score_inf.values()
-#     my_debug('Literature', min(x_lit_score), max(x_lit_score))
-#     my_debug('Proposal', min(x_inf_score), max(x_inf_score))
-#     plt.bar(X_axis - 0.2, x_lit_score, 0.4, label='Literature', color=color1)
-#     plt.bar(X_axis + 0.2, x_inf_score, 0.4, label='Proposal', color=color2)
-#     plt.ylim(ylim)
-#     plt.xticks(X_axis, classifier_names)
-#     plt.legend(loc='upper center', bbox_to_anchor=(0.5, -bottom_size),
-#                fancybox=True, shadow=True, ncol=3, fontsize=font_size)
-#     plt.subplots_adjust(bottom=bottom_size)
-#     plt.tick_params(axis='both', which='major', labelsize=font_size)
-#     plt.tick_params(axis='x', labelrotation=45)
-#     if path is not None:
-#         plt.savefig(f'{path}/score_results_pred.png')
-
-
-# def plot_roc_auc(roc_auc_lit, roc_auc_inf, ylim=(0.5, 1.05), path=None):
-#     font_size = 24
-#     bottom_size = 0.3
-#     X_axis = np.arange(len(classifier_names))
-#
-#     plt.figure('ROC AUC', figsize=(17, 9))
-#     x_lit_score = roc_auc_lit.values()
-#     x_inf_score = roc_auc_inf.values()
-#     my_debug('Literature', min(x_lit_score), max(x_lit_score))
-#     my_debug('Proposal', min(x_inf_score), max(x_inf_score))
-#     plt.bar(X_axis - 0.2, x_lit_score, 0.4, label='Literature', color=color1)
-#     plt.bar(X_axis + 0.2, x_inf_score, 0.4, label='Proposal', color=color2)
-#     plt.ylim(ylim)
-#     plt.xticks(X_axis, classifier_names)
-#     plt.legend(loc='upper center', bbox_to_anchor=(0.5, -bottom_size),
-#                fancybox=True, shadow=True, ncol=3, fontsize=font_size)
-#     plt.subplots_adjust(bottom=bottom_size)
-#     plt.tick_params(axis='both', which='major', labelsize=font_size)
-#     plt.tick_params(axis='x', labelrotation=45)
-#     if path is not None:
-#         plt.savefig(f'{path}/roc_auc.png')
-
-
 def plot_roc_auc_dict(roc_auc_lit, roc_auc_inf, ylim=(0.5, 1.05), path=None):
     font_size = 24
-    bottom_size = 0.3
+    bottom_size = 0.6
     X_axis = np.arange(len(classifier_names))
 
     plt.figure('ROC AUC', figsize=config.default_figsize)
@@ -285,9 +258,6 @@ def experiment_1_measure(window_size, k_fold, path, feature):
             score_dict[clf_name] = score_dict.get(clf_name, []) + [metrics.accuracy_score(y, y_pred)]
             precision_dict[clf_name] = precision_dict.get(clf_name, []) + [metrics.precision_score(y, y_pred)]
             recall_dict[clf_name] = recall_dict.get(clf_name, []) + [metrics.recall_score(y, y_pred)]
-
-            # y_dict[clf_name] = y_dict.get(clf_name, []) + y.tolist()
-            # y_pred_dict[clf_name] = y_pred_dict.get(clf_name, []) + y_pred.tolist()
         except Exception as e:
             my_debug(f'Error in "classifier_handle".', e, set(y), len(y))
 
@@ -295,8 +265,8 @@ def experiment_1_measure(window_size, k_fold, path, feature):
     manager = multiprocessing.Manager()
     score_dict = manager.dict()
     roc_auc_dict = manager.dict()
-    y_dict = manager.dict()
-    y_pred_dict = manager.dict()
+    # y_dict = manager.dict()
+    # y_pred_dict = manager.dict()
     precision_dict = manager.dict()
     recall_dict = manager.dict()
     df_arr = []
@@ -308,7 +278,6 @@ def experiment_1_measure(window_size, k_fold, path, feature):
                 [1, 2, 3, 4, 5],
                 [1, 3, 5, 6, 7],
         )):
-            # trip = random.choice(trips)
             trip = trips[t]
             csv_filename = f'{path}/{driver}/All_{trip}.csv'
             _df = pd.read_csv(csv_filename)
@@ -376,12 +345,6 @@ def experiment_2_measure(path, feature, path_to_save):
         my_debug(f'Repetition {repetition}', path=path_to_save)
         df_arr = []
         df_test_arr = []
-        # for driver, trips in zip('ABCD', (
-        #         [1, 2, 3, 4, 5, 6, 7, 8],
-        #         [1, 2, 3, 4, 6, 7, 8],
-        #         [1, 2, 3, 4, 5],
-        #         [1, 3, 5, 6, 7, 8],
-        # )):
         for driver, trips in zip('ABCD', (
                 [1, 2, 3, 4, 5],
                 [1, 2, 3, 4, 6],
@@ -428,12 +391,6 @@ def experiment_2_measure(path, feature, path_to_save):
 def experiment_3_measure(path, feature):
     def classifier_handle(y_test_arr, y_prediction_arr):
         try:
-            # t0 = time.time()
-            # clf.fit(X_train, y_train)
-            # fit_time[clf_name] = fit_time.get(clf_name, []) + [time.time() - t0]
-            # y_pred = clf.predict(X_test)
-            # score_value = sklearn.metrics.accuracy_score(y_pred, y_test)
-            # score[clf_name] = score.get(clf_name, []) + [score_value]
             t0 = time.time()
             clf.fit(X_train, y_train)
             fit_time[clf_name] = fit_time.get(clf_name, []) + [time.time() - t0]
@@ -497,8 +454,8 @@ def experiment_1():
 
     window_size = 120
     k_fold = 5
-    data_inf = experiment_1_measure(window_size, k_fold, '../../ThisCarIsMineInf', config.feature_inf)
-    data_lit = experiment_1_measure(window_size, k_fold, '../../ThisCarIsMineNormalized', config.feature_lit)
+    data_inf = experiment_1_measure(window_size, k_fold, './ThisCarIsMineInf', config.feature_inf)
+    data_lit = experiment_1_measure(window_size, k_fold, './ThisCarIsMineNormalized', config.feature_lit)
     with open(f'{path_to_save}/analyse_experiment_1.out_values.txt', 'w') as out:
         json.dump((data_lit, data_inf), out)
 
@@ -516,9 +473,9 @@ def experiment_2():
     my_debug('Running', experiment_name, path=path_to_save)
 
     my_debug('Inf Theory', path=path_to_save)
-    data_inf = experiment_2_measure('../../ThisCarIsMineInf', config.feature_inf, path_to_save=path_to_save)
+    data_inf = experiment_2_measure('./ThisCarIsMineInf', config.feature_inf, path_to_save=path_to_save)
     my_debug('Literature', path=path_to_save)
-    data_lit = experiment_2_measure('../../ThisCarIsMineNormalized', config.feature_lit, path_to_save=path_to_save)
+    data_lit = experiment_2_measure('./ThisCarIsMineNormalized', config.feature_lit, path_to_save=path_to_save)
     with open(path_to_save + '/analyse_experiment_2.out_values.txt', 'w') as out:
         json.dump((data_lit, data_inf), out)
 
@@ -537,8 +494,8 @@ def experiment_3():
     my_debug('Running', experiment_name)
     path_to_save = './results/experiment_3'
 
-    data_inf = experiment_3_measure('../../ThisCarIsMineInf', config.feature_inf_120)
-    data_lit = experiment_3_measure('../../ThisCarIsMine', config.feature_lit)
+    data_inf = experiment_3_measure('./ThisCarIsMineInf', config.feature_inf_120)
+    data_lit = experiment_3_measure('./ThisCarIsMine', config.feature_lit)
     with open(path_to_save + '/analyse_experiment_3.out_values.txt', 'w') as out:
         json.dump((data_lit, data_inf), out)
 
@@ -564,8 +521,8 @@ def experiment_inf(experiment_name, feature_inf):
 
     # window_size = 120
     # k_fold = 5
-    # data_inf = experiment_1_measure(window_size, k_fold, '../../ThisCarIsMineInf', feature_inf)
-    # data_lit = experiment_1_measure(window_size, k_fold, '../../ThisCarIsMineNormalized', config.feature_lit)
+    # data_inf = experiment_1_measure(window_size, k_fold, './ThisCarIsMineInf', feature_inf)
+    # data_lit = experiment_1_measure(window_size, k_fold, './ThisCarIsMineNormalized', config.feature_lit)
     # with open(f'{path_to_save}/analyse_{experiment_name}.out_values.txt', 'w') as out:
     #     json.dump((data_lit, data_inf), out)
 
@@ -595,15 +552,15 @@ def experiment_inf_2(experiment_name, feature_inf_hc, feature_inf_fs, feature_in
     my_debug('Running', experiment_name)
     path_to_save = f'./results/experiment/'
 
-    window_size = 120
-    k_fold = 5
-    dataset_path = '../../ThisCarIsMineInf_window720_dx6'
-    data_inf_hc = experiment_1_measure(window_size, k_fold, dataset_path, feature_inf_hc)
-    data_inf_fs = experiment_1_measure(window_size, k_fold, dataset_path, feature_inf_fs)
-    data_inf_hc_fs = experiment_1_measure(window_size, k_fold, dataset_path, feature_inf_hc_fs)
-    data_lit = experiment_1_measure(window_size, k_fold, '../../ThisCarIsMineNormalized', config.feature_lit)
-    with open(f'{path_to_save}/analyse_{experiment_name}.out_values.txt', 'w') as out:
-        json.dump((data_lit, data_inf_hc, data_inf_fs, data_inf_hc_fs), out)
+    # window_size = 120
+    # k_fold = 5
+    # dataset_path = './ThisCarIsMineInf_window720_dx6'
+    # data_inf_hc = experiment_1_measure(window_size, k_fold, dataset_path, feature_inf_hc)
+    # data_inf_fs = experiment_1_measure(window_size, k_fold, dataset_path, feature_inf_fs)
+    # data_inf_hc_fs = experiment_1_measure(window_size, k_fold, dataset_path, feature_inf_hc_fs)
+    # data_lit = experiment_1_measure(window_size, k_fold, './ThisCarIsMineNormalized', config.feature_lit_remaining)
+    # with open(f'{path_to_save}/analyse_{experiment_name}.out_values.txt', 'w') as out:
+    #     json.dump((data_lit, data_inf_hc, data_inf_fs, data_inf_hc_fs), out)
 
     with open(f'{path_to_save}/analyse_{experiment_name}.out_values.txt', 'r') as data_file:
         data_lit, data_inf_hc, data_inf_fs, data_inf_hc_fs = json.load(data_file)
@@ -648,15 +605,18 @@ if __name__ == '__main__':
     # experiment_inf(experiment_name='hc_fs', feature_inf=config.feature_inf_hc)
     experiment_inf_2(
         experiment_name='inf',
-        feature_inf_hc=config.feature_inf_hc,
-        feature_inf_fs=config.feature_inf_fs,
-        feature_inf_hc_fs=config.feature_inf_hcfs
+        # feature_inf_hc=config.feature_inf_hc,
+        # feature_inf_fs=config.feature_inf_fs,
+        # feature_inf_hc_fs=config.feature_inf_hcfs
+        feature_inf_hc=config.feature_inf_remaining_hc,
+        feature_inf_fs=config.feature_inf_remaining_fs,
+        feature_inf_hc_fs=config.feature_inf_remaining
     )
 
     # experiment_sample_size()
     # plt.show()
 
-    # path = '../../ThisCarIsMineInf'
+    # path = './ThisCarIsMineInf'
     # dfa = process_file(path, 'A', 8)
     # dfb = process_file(path, 'B', 8)
     # dfc = process_file(path, 'C', 5)
