@@ -1,6 +1,9 @@
 # My folder results
 results
 
+# My dataset
+datasets*
+
 # Imagens
 *.png
 

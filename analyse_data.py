@@ -1,16 +1,13 @@
 import json
 import math
 import multiprocessing
-import time
-from datetime import timedelta
+import os
+# from datetime import timedelta
 
-import numpy
 import ordpy
 import pandas as pd
 import numpy as np
-import sklearn
 from matplotlib import pyplot as plt
-from numpy import mean
 from ordpy import minimum_complexity_entropy, maximum_complexity_entropy
 from sklearn import metrics
 from sklearn.ensemble import RandomForestClassifier
@@ -23,9 +20,6 @@ from scipy.stats import sem
 import seaborn as sns
 
 import config
-import data_preprocessing as dpp
-from information import InformationHandle
-from getdata import GetData
 
 color1 = '#115f9a'
 color2 = '#009dc3'
@@ -61,7 +55,7 @@ def plot_limits(hc_min, hc_max):
     plt.plot(hc_max[0], hc_max[1], color="black", linewidth=0.8)
 
 
-def get_data_list(path='./ThisCarIsMine'):
+def get_data_list(path='./datasets/ThisCarIsMine'):
     data_arr = [
         (pd.read_csv(path + '/A/All_1.csv'), 'A'),
         (pd.read_csv(path + '/A/All_2.csv'), 'A'),
@@ -121,7 +115,7 @@ def split_data_to_window(series, window_size, shift):
 
 def get_first_trip(path=None):
     if path is None:
-        path = './ThisCarIsMine'
+        path = './datasets/ThisCarIsMine'
     dfa = pd.read_csv(path + '/A/All_1.csv')
     dfb = pd.read_csv(path + '/B/All_1.csv')
     dfc = pd.read_csv(path + '/C/All_1.csv')
@@ -146,7 +140,7 @@ def analyse_variance(features=config.all_features):
     # dfc = pd.concat([i[0] for i in data_arr if i[1] == 'C'])
     # dfd = pd.concat([i[0] for i in data_arr if i[1] == 'D'])
 
-    path = './ThisCarIsMine'
+    path = './datasets/ThisCarIsMine'
     dfa = pd.read_csv(path + '/A/All_1.csv')
     dfb = pd.read_csv(path + '/B/All_1.csv')
     dfc = pd.read_csv(path + '/C/All_1.csv')
@@ -330,7 +324,7 @@ def analyse_ordinal_histogram(feature, path_to_save, dx=3, split_series=False):
 
 
 def analyse_information_preprocessing():
-    data = get_data_list('./ThisCarIsMineInf_window720_dx6')
+    data = get_data_list('./datasets/ThisCarIsMineInf_window720_dx6')
     df = pd.concat([i[0] for i in data])
     df = df[config.feature_lit_remaining]
     print(df.isna().sum(), '\n')
@@ -350,37 +344,54 @@ def choose_embedded_dimension(series_length):
     return 8
 
 
-def analyse_hc_parameters(path_output):
-    def classifier_handle(accuracy, roc_auc):
-        try:
-            y_pred = cross_val_predict(clf, X, y, cv=5)
-            fpr, tpr, threshold = metrics.roc_curve(y, y_pred)
-            roc_auc += [metrics.auc(fpr, tpr)]
-            accuracy += [metrics.accuracy_score(y, y_pred)]
-            # accuracy += list(cross_val_score(clf, X, y, scoring='accuracy'))
-            # roc_auc += list(cross_val_score(clf, X, y, scoring='roc_auc'))
-        except Exception as e:
-            print(f'Error in "analyse_hc_parameters::classifier_handle".', e)
-
-    path_input = []
+def analyse_hc_parameters(directory_output):
     X_names = []
+    path_input = []
     for series_length in range(60, 901, 60):
         d = choose_embedded_dimension(series_length)
-        _path = f'./ThisCarIsMineInf_window{series_length}_dx{d}'
+        _path = f'./datasets/ThisCarIsMineInf_window{series_length}_dx{d}'
         X_names.append(str(series_length))
         path_input.append(_path)
 
+    def classifier_handle(accuracy, roc_auc, precision, recall):
+        try:
+            # To predict
+            y_pred = cross_val_predict(clf, X, y, cv=5)
+
+            # Get scores
+            accuracy_value = metrics.accuracy_score(y, y_pred)
+            fpr, tpr, threshold = metrics.roc_curve(y, y_pred)
+            roc_auc_value = metrics.auc(fpr, tpr)
+            precision_value = metrics.precision_score(y, y_pred)
+            recall_value = metrics.recall_score(y, y_pred)
+
+            # Add scores to external list
+            accuracy.append(accuracy_value)
+            roc_auc.append(roc_auc_value)
+            precision.append(precision_value)
+            recall.append(recall_value)
+        except Exception as e:
+            print(f'Error in "analyse_hc_parameters::classifier_handle".', e)
+
     accuracy_list = []
     accuracy_sem_list = []
+
     roc_auc_list = []
     roc_auc_sem_list = []
+
+    precision_list = []
+    precision_sem_list = []
+
+    recall_list = []
+    recall_sem_list = []
+
     # classifier = SVC
     classifier = RandomForestClassifier
     print(classifier)
     for path in path_input:
         df_list = []
         for driver in 'ABCD':
-            _df = pd.read_csv(path + f'/{driver}/All_1.csv')[config.feature_inf_remaining].dropna()
+            _df = pd.read_csv(path + f'/{driver}/All_1.csv')[config.feature_inf_remaining].dropna() # TODO: refazer caminho para arquivo
             _df['driver'] = [driver] * _df.shape[0]
             df_list.append(_df)
         df = pd.concat(df_list)
@@ -389,51 +400,92 @@ def analyse_hc_parameters(path_output):
         manager = multiprocessing.Manager()
         accuracy = manager.list()
         roc_auc = manager.list()
+        precision = manager.list()
+        recall = manager.list()
         running_process = []
         for driver in 'ABCD':
             y = df['driver'].replace(['A', 'B', 'C', 'D'],
                                      ['A' == driver, 'B' == driver, 'C' == driver, 'D' == driver])
             clf = classifier()
             p = multiprocessing.Process(target=classifier_handle,
-                                        args=(accuracy, roc_auc))
+                                        args=(accuracy, roc_auc, precision, recall))
             p.start()
             running_process.append(p)
         for p in running_process:
             p.join()
-        accuracy_list.append(mean(accuracy))
+
+        accuracy_list.append(np.mean(accuracy))
         accuracy_sem_list.append(sem(accuracy))
-        roc_auc_list.append(mean(roc_auc))
+
+        roc_auc_list.append(np.mean(roc_auc))
         roc_auc_sem_list.append(sem(roc_auc))
-    with open(path_output + '/analyse_data__analyse_hc_parameters.log', 'w') as out:
-        json.dump((accuracy_list, accuracy_sem_list, roc_auc_list, roc_auc_sem_list), out)
-    with open(path_output + '/analyse_data__analyse_hc_parameters.log', 'r') as data_file:
-        accuracy_list, accuracy_sem_list, roc_auc_list, roc_auc_sem_list = json.load(data_file)
+
+        precision_list.append(np.mean(precision))
+        precision_sem_list.append(sem(precision))
+
+        recall_list.append(np.mean(recall))
+        recall_sem_list.append(sem(recall))
+
+
+    if not os.path.exists(directory_output):
+        print('\t[create directory]', directory_output)
+        os.makedirs(directory_output, exist_ok=True)
+    with open(directory_output + '/analyse_data__analyse_hc_parameters.log', 'w') as out:
+        json.dump(
+            (
+                accuracy_list, accuracy_sem_list,
+                roc_auc_list, roc_auc_sem_list,
+                precision_list, precision_sem_list,
+                recall_list, recall_sem_list,
+            ),
+            out
+        )
+    with open(directory_output + '/analyse_data__analyse_hc_parameters.log', 'r') as data_file:
+        accuracy_list, accuracy_sem_list, \
+            roc_auc_list, roc_auc_sem_list, \
+            precision_list, precision_sem_list, \
+            recall_list, recall_sem_list = json.load(data_file)
+        print(len(accuracy_list), len(accuracy_sem_list))
+        print(len(roc_auc_list), len(roc_auc_sem_list))
+        print(len(precision_list), len(precision_sem_list))
+        print(len(recall_list), len(recall_sem_list))
+        print()
+        print(precision_list, precision_sem_list)
+        print(recall_list, recall_sem_list)
         font_size = 24
-        plt.figure(figsize=config.default_figsize)
+        legend_font_size = 18
+        bar_width = 0.2
+        x, y = config.default_figsize
+        plt.figure(figsize=(x * 2, y))
         X_axis = np.arange(len(X_names))
-        plt.bar(X_axis - 0.2, accuracy_list, 0.4,
+        plt.bar(X_axis - 0.3, accuracy_list, bar_width,
                 yerr=accuracy_sem_list, label='Accuracy', color=color1, edgecolor="black")
-        plt.bar(X_axis + 0.2, roc_auc_list, 0.4,
-                yerr=roc_auc_sem_list, label='ROC AUC', color=color3, edgecolor="black")
+        plt.bar(X_axis - 0.1, roc_auc_list, bar_width,
+                yerr=roc_auc_sem_list, label='ROC AUC', color=color2, edgecolor="black")
+        plt.bar(X_axis + 0.1, precision_list, bar_width,
+                yerr=precision_sem_list, label='Precision', color=color3, edgecolor="black")
+        plt.bar(X_axis + 0.3, recall_list, bar_width,
+                yerr=recall_sem_list, label='Recall', color=color4, edgecolor="black")
         plt.xticks(X_axis, X_names)
         plt.tick_params(axis='both', which='major', labelsize=font_size)
-        plt.tick_params(axis='x', labelrotation=90)
-        plt.subplots_adjust(bottom=.2)
+        # plt.tick_params(axis='x', labelrotation=90)
+        plt.subplots_adjust(bottom=.15)
         plt.ylim((0.5, 1))
-        # plt.subplots_adjust(bottom=0.2)
-        plt.xlabel('Lenght', fontsize=font_size)
+        plt.xlabel('Length', fontsize=font_size)
         plt.ylabel('Score', fontsize=font_size)
         plt.legend(fontsize=font_size - 4)
+        plt.legend(loc='upper center', bbox_to_anchor=(0.5, 1.2),
+                   fancybox=True, shadow=True, ncol=2, fontsize=legend_font_size)
 
         major_ticks = np.arange(.5, 1.01, .1)
         minor_ticks = np.arange(.5, 1.01, .05)
         plt.yticks(major_ticks)
         plt.yticks(minor_ticks, minor=True)
-        plt.grid(axis='y')
-        plt.grid(which='minor', alpha=0.5)
-        plt.grid(which='major', alpha=1)
+        plt.grid(which='major', alpha=.5)
+        plt.grid(which='minor', alpha=.2)
+        plt.grid(axis='x')
 
-        plt.savefig(path_output + '/analyse_data__analyse_hc_parameters.png')
+        plt.savefig(directory_output + '/analyse_data__analyse_hc_parameters.png')
 
 
 def plot_c_limits(dx, path_to_save='.'):
@@ -452,9 +504,12 @@ def plot_c_limits(dx, path_to_save='.'):
 
 
 def analyse_nan():
+    series_length_list = []
+    column_nan_list = []
+    max_nan_percent = []
     for series_length in range(60, 901, 60):
         d = choose_embedded_dimension(series_length)
-        _path = f'./ThisCarIsMineInf_window{series_length}_dx{d}'
+        _path = f'./datasets/ThisCarIsMineInf_window{series_length}_dx{d}'
         df = get_first_trip(_path)[config.feature_inf_remaining]
         print('\n\n', _path)
         # Calcular a quantidade de NaN em cada coluna
@@ -470,21 +525,165 @@ def analyse_nan():
         # Filtrar as colunas que têm NaN
         nan_info = nan_info[nan_info['NaN Count'] > 0]
 
+        series_length_list.append(series_length)
+        column_nan_list.append(len(nan_info))
+        max_nan_percent.append(nan_info['NaN Percentage'].max())
         print('\t', 'Número de colunas com NaN:', len(nan_info))
-        print('\t', 'Porcentagens:', 'max =', nan_info['NaN Percentage'].max(), 'min =', nan_info['NaN Percentage'].min())
+        print('\t', 'Porcentagens:', 'max =', nan_info['NaN Percentage'].max(), 'min =',
+              nan_info['NaN Percentage'].min())
 
         # print('\t', "Colunas com NaN e porcentagem de NaN:")
         # print('\t', nan_info)
         # df_arr = get_data_list(_path)
         # for df, driver in df_arr:
-            # for i, f in enumerate(config.feature_inf_remaining):
-            #     print(driver, i + 1,
-            #           ', df.shape =', df[f].shape,
-            #           ', df_dropna.shape =', df[f].dropna().shape,
-            #           ', feature =', f)
+        # for i, f in enumerate(config.feature_inf_remaining):
+        #     print(driver, i + 1,
+        #           ', df.shape =', df[f].shape,
+        #           ', df_dropna.shape =', df[f].dropna().shape,
+        #           ', feature =', f)
+
+    X_axis = np.arange(len(series_length_list))
+    font_size = 24
+    label_size = 26
+
+    fig_name = 'analyse_columns_nan'
+    plt.figure(fig_name, figsize=config.default_figsize)
+    plt.bar(X_axis, column_nan_list, color=color1, edgecolor="black")
+    plt.xticks(X_axis, series_length_list)
+    plt.xlabel('Length', fontsize=font_size)
+    plt.ylabel('Number of columns with NaN', fontsize=font_size)
+    plt.tick_params(axis='both', which='major', labelsize=label_size)
+    plt.tick_params(axis='x', labelrotation=90)
+    plt.subplots_adjust(bottom=.2)
+    #
+    # major_ticks = np.arange(0, 61, 20)
+    # minor_ticks = np.arange(0, 61, 10)
+    # plt.yticks(major_ticks)
+    # plt.yticks(minor_ticks, minor=True)
+    # plt.grid(axis='y')
+    # plt.grid(which='minor', alpha=.3)
+    # plt.grid(which='major', alpha=.8)
+    #
+    plt.savefig(f'results/nan/{fig_name}.png')
+
+    fig_name = 'analyse_percent_nan'
+    plt.figure(fig_name, figsize=config.default_figsize)
+    plt.bar(X_axis, max_nan_percent, color=color1, edgecolor="black")
+    plt.xticks(X_axis, series_length_list)
+    plt.xlabel('Length', fontsize=font_size)
+    plt.ylabel('Maximum NaN percentage', fontsize=font_size)
+    plt.tick_params(axis='both', which='major', labelsize=label_size)
+    plt.tick_params(axis='x', labelrotation=90)
+    plt.subplots_adjust(bottom=.2)
+    #
+    # major_ticks = np.arange(0, 61, 20)
+    # minor_ticks = np.arange(0, 61, 10)
+    # plt.yticks(major_ticks)
+    # plt.yticks(minor_ticks, minor=True)
+    # plt.grid(axis='y')
+    # plt.grid(which='minor', alpha=.3)
+    # plt.grid(which='major', alpha=.8)
+    #
+    plt.savefig(f'results/nan/{fig_name}.png')
 
 
-def analyse_time(path_output):
+# def analyse_time(directory_out):
+#     def get_data(path):
+#         data_arr = [
+#             pd.read_csv(path + '/A/All_1.csv.time'),
+#             pd.read_csv(path + '/A/All_2.csv.time'),
+#             pd.read_csv(path + '/A/All_3.csv.time'),
+#             pd.read_csv(path + '/A/All_4.csv.time'),
+#             pd.read_csv(path + '/A/All_5.csv.time'),
+#             #
+#             pd.read_csv(path + '/B/All_1.csv.time'),
+#             pd.read_csv(path + '/B/All_2.csv.time'),
+#             pd.read_csv(path + '/B/All_3.csv.time'),
+#             pd.read_csv(path + '/B/All_4.csv.time'),
+#             pd.read_csv(path + '/B/All_6.csv.time'),
+#             #
+#             pd.read_csv(path + '/C/All_1.csv.time'),
+#             pd.read_csv(path + '/C/All_2.csv.time'),
+#             pd.read_csv(path + '/C/All_3.csv.time'),
+#             pd.read_csv(path + '/C/All_4.csv.time'),
+#             pd.read_csv(path + '/C/All_5.csv.time'),
+#             #
+#             pd.read_csv(path + '/D/All_1.csv.time'),
+#             pd.read_csv(path + '/D/All_3.csv.time'),
+#             pd.read_csv(path + '/D/All_5.csv.time'),
+#             pd.read_csv(path + '/D/All_6.csv.time'),
+#             pd.read_csv(path + '/D/All_7.csv.time'),
+#         ]
+#         return pd.concat(data_arr)
+#
+#     # time_lit_20 = get_data('./datasets/ThisCarIsMineNormalized_20')['time_lit'].to_list()
+#     time_lit_120 = get_data('./datasets/ThisCarIsMineNormalized_120')['time_lit'].to_list()
+#     time_lit_300 = get_data('./datasets/ThisCarIsMineNormalized_300')['time_lit'].to_list()
+#     time_lit_720 = get_data('./datasets/ThisCarIsMineNormalized_720')['time_lit'].to_list()
+#     time_lit_900 = get_data('./datasets/ThisCarIsMineNormalized_900')['time_lit'].to_list()
+#     # time_inf_20 = get_data('./datasets/ThisCarIsMineInf_window20_dx4')['time_hc'].to_list()
+#     time_inf_120 = get_data('./datasets/ThisCarIsMineInf_window120_dx5')['time_hc'].to_list()
+#     time_inf_300 = get_data('./datasets/ThisCarIsMineInf_window300_dx6')['time_hc'].to_list()
+#     time_inf_720 = get_data('./datasets/ThisCarIsMineInf_window720_dx6')['time_hc'].to_list()
+#     time_inf_900 = get_data('./datasets/ThisCarIsMineInf_window900_dx7')['time_hc'].to_list()
+#     #
+#     lit_mean = [
+#         # np.mean(time_lit_20),
+#         np.mean(time_lit_120),
+#         np.mean(time_lit_300),
+#         np.mean(time_lit_720),
+#         np.mean(time_lit_900)
+#     ]
+#     lit_sem = [
+#         # sem(time_lit_20),
+#         sem(time_lit_120),
+#         sem(time_lit_300),
+#         sem(time_lit_720),
+#         sem(time_lit_900)
+#     ]
+#     inf_mean = [
+#         # np.mean(time_inf_20),
+#         np.mean(time_inf_120),
+#         np.mean(time_inf_300),
+#         np.mean(time_inf_720),
+#         np.mean(time_inf_900)
+#     ]
+#     inf_sem = [
+#         # sem(time_inf_20),
+#         sem(time_inf_120),
+#         sem(time_inf_300),
+#         sem(time_inf_720),
+#         sem(time_inf_900)
+#     ]
+#     with open(directory_out + '/analyse_data__compute_time.log', 'w') as out:
+#         json.dump((lit_mean, lit_sem, inf_mean, inf_sem), out)
+#     font_size = 24
+#     plt.figure(figsize=config.default_figsize)
+#     X_names = [
+#         # '20',
+#         '120',
+#         '300',
+#         '720',
+#         '900'
+#     ]
+#     with open(directory_out + '/analyse_data__compute_time.log', 'r') as data_file:
+#         lit_mean, lit_sem, inf_mean, inf_sem = json.load(data_file)
+#         X_axis = np.arange(len(X_names))
+#         plt.bar(X_axis - 0.2, lit_mean, 0.4,
+#                 yerr=lit_sem, label='Literature', color=color1, edgecolor="black")
+#         plt.bar(X_axis + 0.2, inf_mean, 0.4,
+#                 yerr=inf_sem, label='Proposal', color=color3, edgecolor="black")
+#         plt.xticks(X_axis, X_names)
+#         plt.tick_params(axis='both', which='major', labelsize=font_size)
+#         # plt.ylim((0.5, 1))
+#         # plt.subplots_adjust(bottom=0.1)
+#         plt.xlabel('Lenght', fontsize=font_size)
+#         plt.ylabel('Time (s)', fontsize=font_size)
+#         plt.legend(fontsize=font_size - 4)
+#         plt.savefig(directory_out + '/analyse_data__compute_time.png')
+#         for lit, inf in zip(lit_mean, inf_mean):
+#             print(f'lit: {lit}, inf: {inf}. ', inf - lit, inf / lit)
+def analyse_time(directory_out):
     def get_data(path):
         data_arr = [
             pd.read_csv(path + '/A/All_1.csv.time'),
@@ -513,57 +712,30 @@ def analyse_time(path_output):
         ]
         return pd.concat(data_arr)
 
-    time_lit_20 = get_data('./ThisCarIsMineNormalized_20')['time_lit'].to_list()
-    time_lit_120 = get_data('./ThisCarIsMineNormalized_120')['time_lit'].to_list()
-    time_lit_300 = get_data('./ThisCarIsMineNormalized_300')['time_lit'].to_list()
-    time_lit_720 = get_data('./ThisCarIsMineNormalized_720')['time_lit'].to_list()
-    time_lit_900 = get_data('./ThisCarIsMineNormalized_900')['time_lit'].to_list()
-    time_inf_20 = get_data('./ThisCarIsMineInf_window20_dx4')['time_hc'].to_list()
-    time_inf_120 = get_data('./ThisCarIsMineInf_window120_dx5')['time_hc'].to_list()
-    time_inf_300 = get_data('./ThisCarIsMineInf_window300_dx6')['time_hc'].to_list()
-    time_inf_720 = get_data('./ThisCarIsMineInf_window720_dx6')['time_hc'].to_list()
-    time_inf_900 = get_data('./ThisCarIsMineInf_window900_dx7')['time_hc'].to_list()
-    #
-    lit_mean = [
-        mean(time_lit_20),
-        mean(time_lit_120),
-        mean(time_lit_300),
-        mean(time_lit_720),
-        mean(time_lit_900)
-    ]
-    lit_sem = [
-        sem(time_lit_20),
-        sem(time_lit_120),
-        sem(time_lit_300),
-        sem(time_lit_720),
-        sem(time_lit_900)
-    ]
-    inf_mean = [
-        mean(time_inf_20),
-        mean(time_inf_120),
-        mean(time_inf_300),
-        mean(time_inf_720),
-        mean(time_inf_900)
-    ]
-    inf_sem = [
-        sem(time_inf_20),
-        sem(time_inf_120),
-        sem(time_inf_300),
-        sem(time_inf_720),
-        sem(time_inf_900)
-    ]
-    with open(path_output + '/analyse_data__compute_time.log', 'w') as out:
+    lit_mean, lit_sem = [], []
+    inf_mean, inf_sem = [], []
+    for i in range(60, 901, 60):
+        # lit = get_data(f'./datasets/ThisCarIsMineNormalized_{i}')['time_lit'].to_list()
+        d = choose_embedded_dimension(i)
+        inf = get_data(f'./datasets/ThisCarIsMineInf_window{i}_dx{d}')#['time_hc'].to_list()
+        inf = inf.sum(axis=1).to_list()
+        #
+        # lit_mean.append(np.mean(lit))
+        # lit_sem.append(sem(lit))
+        lit_mean.append(0.001)
+        lit_sem.append(0.001)
+        inf_mean.append(np.mean(inf))
+        inf_sem.append(sem(inf))
+    with open(directory_out + '/analyse_data__compute_time.log', 'w') as out:
         json.dump((lit_mean, lit_sem, inf_mean, inf_sem), out)
+    
+    # Plot
     font_size = 24
-    plt.figure(figsize=config.default_figsize)
-    X_names = [
-        '20',
-        '120',
-        '300',
-        '720',
-        '900'
-    ]
-    with open(path_output + '/analyse_data__compute_time.log', 'r') as data_file:
+    legend_font_size = 18
+    x, y = config.default_figsize
+    plt.figure(figsize=(x*2, y))
+    X_names = [f'{i}' for i in range(60, 901, 60)]
+    with open(directory_out + '/analyse_data__compute_time.log', 'r') as data_file:
         lit_mean, lit_sem, inf_mean, inf_sem = json.load(data_file)
         X_axis = np.arange(len(X_names))
         plt.bar(X_axis - 0.2, lit_mean, 0.4,
@@ -573,18 +745,28 @@ def analyse_time(path_output):
         plt.xticks(X_axis, X_names)
         plt.tick_params(axis='both', which='major', labelsize=font_size)
         # plt.ylim((0.5, 1))
-        # plt.subplots_adjust(bottom=0.1)
-        plt.xlabel('Lenght', fontsize=font_size)
+        plt.subplots_adjust(bottom=0.15)
+        plt.xlabel('Length', fontsize=font_size)
         plt.ylabel('Time (s)', fontsize=font_size)
-        plt.legend(fontsize=font_size - 4)
-        plt.savefig(path_output + '/analyse_data__compute_time.png')
+        plt.legend(loc='upper center', bbox_to_anchor=(0.5, 1.15),
+                   fancybox=True, shadow=True, ncol=2, fontsize=legend_font_size)
+        #
+        major_ticks = np.arange(0, .09, .02)
+        minor_ticks = np.arange(0, .09, .01)
+        plt.yticks(major_ticks, )
+        plt.yticks(minor_ticks, minor=True)
+        plt.grid(which='major', alpha=.5)
+        plt.grid(which='minor', alpha=.2)
+        plt.grid(axis='x')
+        #
+        plt.savefig(directory_out + '/analyse_data__compute_time.png')
         for lit, inf in zip(lit_mean, inf_mean):
             print(f'lit: {lit}, inf: {inf}. ', inf - lit, inf / lit)
 
 
 def sliding_window_plt():
     feature = 'engine_torque'
-    df = pd.read_csv('./ThisCarIsMine/A/All_1.csv')[:300]
+    df = pd.read_csv('./datasets/ThisCarIsMine/A/All_1.csv')[:300]
     df = df[feature]
     font_size = 24
     plt.figure(figsize=config.default_figsize)
@@ -598,7 +780,7 @@ def sliding_window_plt():
 
 
 def analyse_inf_feature_nan(features):
-    data_arr = get_data_list('./ThisCarIsMineInf_window720_dx6')
+    data_arr = get_data_list('./datasets/ThisCarIsMineInf_window720_dx6')
     features_inf = []
     for i in features:
         features_inf.append(f'{i}_entropy')
@@ -628,50 +810,52 @@ def analyse_inf_feature_nan(features):
 
 def analyse_inf_plane(feature, path_to_save, plane, dx=7, split_series=False):
     print(f'\n  # Information Plane: {feature}')
-    data_dict = multiprocessing.Manager().dict(
-        {
-            'A': ([], [], [], []),  # Entropy, Complexity, Fisher, Shannon
-            'B': ([], [], [], []),
-            'C': ([], [], [], []),
-            'D': ([], [], [], [])
-        }
-    )
-
-    def information_measure(series, driver, feature):
-        if split_series:
-            series_list = split_data_to_window(series, 120, 60)
-        else:
-            series_list = [series]
-        h_list_local, c_list_local, f_list_local, s_list_local = [], [], [], []
-        for _series in series_list:
-            _series = preprocessing_to_hc(_series)
-            try:
-                if 'hc' in plane:
-                    h, c = ordpy.complexity_entropy(_series, dx=dx)
-                    h_list_local.append(h)
-                    c_list_local.append(c)
-                if 'fs' in plane:
-                    s, f = ordpy.fisher_shannon(_series, dx=dx)
-                    f_list_local.append(f)
-                    s_list_local.append(s)
-            except Exception as e:
-                print(f'Error in analyse_inf_plan::information_measure. '
-                      f'len(_series)={len(_series)}, dx={dx}, feature={feature}.', e)
-        h_list, c_list, f_list, s_list = data_dict[driver]
-        data_dict[driver] = (h_list+h_list_local, c_list+c_list_local, f_list+f_list_local, s_list+s_list_local)
-
-    data_arr = get_data_list()
-    process = []
-    for data in data_arr:
-        p = multiprocessing.Process(target=information_measure,
-                                    args=(data[0][feature], data[1], feature))
-        p.start()
-        process.append(p)
-    print('Number of processed files:', len(process))
-    for p in process:
-        p.join()
-    with open('data_dict.json', 'w') as file:
-        json.dump(dict(data_dict), file)
+    # data_dict = multiprocessing.Manager().dict(
+    #     {
+    #         'A': ([], [], [], []),  # Entropy, Complexity, Fisher, Shannon
+    #         'B': ([], [], [], []),
+    #         'C': ([], [], [], []),
+    #         'D': ([], [], [], [])
+    #     }
+    # )
+    #
+    # def information_measure(series, driver, feature):
+    #     if split_series:
+    #         series_list = split_data_to_window(series, 120, 60)
+    #     else:
+    #         series_list = [series]
+    #     h_list_local, c_list_local, f_list_local, s_list_local = [], [], [], []
+    #     for _series in series_list:
+    #         _series = preprocessing_to_hc(_series)
+    #         try:
+    #             if 'hc' in plane:
+    #                 h, c = ordpy.complexity_entropy(_series, dx=dx)
+    #                 h_list_local.append(h)
+    #                 c_list_local.append(c)
+    #             if 'fs' in plane:
+    #                 s, f = ordpy.fisher_shannon(_series, dx=dx)
+    #                 f_list_local.append(f)
+    #                 s_list_local.append(s)
+    #         except Exception as e:
+    #             print(f'Error in analyse_inf_plan::information_measure. '
+    #                   f'len(_series)={len(_series)}, dx={dx}, feature={feature}.', e)
+    #     h_list, c_list, f_list, s_list = data_dict[driver]
+    #     data_dict[driver] = (h_list+h_list_local, c_list+c_list_local, f_list+f_list_local, s_list+s_list_local)
+    #
+    # data_arr = get_data_list()
+    # process = []
+    # for data in data_arr:
+    #     p = multiprocessing.Process(target=information_measure,
+    #                                 args=(data[0][feature], data[1], feature))
+    #     p.start()
+    #     process.append(p)
+    # print('Number of processed files:', len(process))
+    # for p in process:
+    #     p.join()
+    # with open('data_dict.json', 'w') as file:
+    #     json.dump(dict(data_dict), file)
+    with open('data_dict.json', 'r') as file:
+        data_dict = json.load(file)
     hc_min, hc_max = hc_limits(dx)
     #
     font_size = 24
@@ -777,7 +961,7 @@ if __name__ == '__main__':
     # print('[!] Features inf NaN:', len(exc), exc)
     # print('[!] Features remaining:', len(inc), inc)
 
-    # # INF THEORY PLAN
+    # INF THEORY PLAN
     # dx = 7
     # path_to_save = 'results/inf_plane'
     # for feature in [
@@ -799,7 +983,8 @@ if __name__ == '__main__':
 
     # analyse_hc_parameters('results/hc_plan')
 
-    # analyse_time('results')
+    analyse_time('results')
+
     # sliding_window_plt()
     # plot_c_limits(3, path_to_save)
     # plot_c_limits(5, path_to_save)
@@ -822,4 +1007,4 @@ if __name__ == '__main__':
 
     # plt.show()
 
-    analyse_nan()
+    # analyse_nan()
