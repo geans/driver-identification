@@ -32,7 +32,10 @@ for dir in "$main_dir"/*; do
             if [ -d "$subdir" ]; then
                 echo "Removendo arquivos descartáveis do diretório: $subdir"
                 # Remove os arquivos que seguem o padrão All_*.csv.part*.csv*
-                mv "$subdir"/All_*.csv.part*.csv* "$trashed"
+                if [ ! -d "$trashed/$subdir" ]; then
+                    mkdir -p "$trashed/$subdir"
+                fi
+                mv "$subdir"/All_*.csv.part*.csv* "$trashed/$subdir/"
                 
                 # Exibe uma mensagem de sucesso ou se não encontrou arquivos
                 if [ $? -eq 0 ]; then

@@ -128,33 +128,33 @@ def dataset__this_car_is_mine():
     for driver_list, file_amount_list in [('A', 8), ('B', 8), ('C', 5), ('D', 9)]:
         for driver in driver_list:
             # Extract information to parts
-            thread_list = []
-            for series_length in range(60, 901, 60):
-                for file_number in range(1,file_amount_list+1):
-                    d = choose_embedded_dimension(series_length)
-                    directory_in =  f'./datasets/ThisCarIsMine/{driver}'
-                    directory_out = f'./datasets/ThisCarIsMineInf_window{series_length}_dx{d}/{driver}'
-
-                    path_in = f'{directory_in}/All_{file_number}.csv'
-                    path_out =f'{directory_out}/All_{file_number}.csv'
-
-                    print(path_out)
-                    if not os.path.exists(directory_out):
-                        print('\t[create path]', directory_out)
-                        os.makedirs(directory_out, exist_ok=True)
-
-                    df = pd.read_csv(path_in)
-                    thread_list += ExtractInformation(
-                        df=df, 
-                        path_out=path_out, 
-                        window_length=series_length, 
-                        embedding_dimension=d, 
-                        number_of_threads=number_of_threads_per_file
-                    ).run()
-            print('Total', len(thread_list), 'threads')
-            for i, thread in enumerate(thread_list, start=1):
-                print(f'{i}/{len(thread_list)}')
-                thread.join()
+#            thread_list = []
+#            for series_length in range(60, 901, 60):
+#                for file_number in range(1,file_amount_list+1):
+#                    d = choose_embedded_dimension(series_length)
+#                    directory_in =  f'./datasets/ThisCarIsMine/{driver}'
+#                    directory_out = f'./datasets/ThisCarIsMineInf_window{series_length}_dx{d}/{driver}'
+#
+#                    path_in = f'{directory_in}/All_{file_number}.csv'
+#                    path_out =f'{directory_out}/All_{file_number}.csv'
+#
+#                    print(path_out)
+#                    if not os.path.exists(directory_out):
+#                        print('\t[create path]', directory_out)
+#                        os.makedirs(directory_out, exist_ok=True)
+#
+#                    df = pd.read_csv(path_in)
+#                    thread_list += ExtractInformation(
+#                        df=df, 
+#                        path_out=path_out, 
+#                        window_length=series_length, 
+#                        embedding_dimension=d, 
+#                        number_of_threads=number_of_threads_per_file
+#                    ).run()
+#            print('Total', len(thread_list), 'threads')
+#            for i, thread in enumerate(thread_list, start=1):
+#                print(f'{i}/{len(thread_list)}')
+#                thread.join()
             
             # Join parts to one csv file
             for file_number in range(1,file_amount_list+1):
