@@ -1,5 +1,10 @@
 # My folder results
 results
+ThisCarIsMine*
+*.zip
+multiprocessing
+ThisCarIsMineNormalized
+*.pdf
 
 # My dataset
 datasets*

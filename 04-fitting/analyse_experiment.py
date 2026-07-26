@@ -1,31 +1,33 @@
 #!/usr/bin/python3
 
 # Bibliotecas padrão
-import os
 import json
+import logging
 import math
+import multiprocessing
+import os
 import time
 import warnings
-import multiprocessing
+
+import matplotlib.pyplot as plt
 
 # Bibliotecas de terceiros
 import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt
 from scipy.stats import sem
 from sklearn import metrics
+from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import KFold, cross_val_predict
-from sklearn.neural_network import MLPClassifier
+from sklearn.naive_bayes import GaussianNB
 from sklearn.neighbors import KNeighborsClassifier
+from sklearn.neural_network import MLPClassifier
 from sklearn.svm import SVC
 from sklearn.tree import DecisionTreeClassifier
-from sklearn.naive_bayes import GaussianNB
-from sklearn.ensemble import RandomForestClassifier
 
 # Configurações do projeto
 import config
-from deeplearningclassifier import LSTMClassifier
 
+#from deeplearningclassifier import LSTMClassifier
 
 warnings.filterwarnings("ignore")
 
@@ -33,6 +35,12 @@ color1 = '#115f9a'
 color2 = '#009dc3'
 color3 = '#00d38d'
 color4 = '#d0f400'
+
+logging.basicConfig(
+    level=logging.INFO, 
+    format='%(asctime)s - %(levelname)s - %(message)s'
+)
+logger = logging.getLogger(__name__)
 
 
 def my_debug(*objects, sep=' ', end='\n', file=None, flush=False, path='.'):
@@ -46,27 +54,27 @@ def my_debug(*objects, sep=' ', end='\n', file=None, flush=False, path='.'):
     # output_file.close()
 
 
-classifier_names = [
-    # "kNN",
-    # "Linear SVM",
-    # "RBF SVM",
-    # "D. Tree",
-    # "R. Forest",
-    # "MLP",
-    # "N. Bayes",
-    "LSTM"
-]
+classifier_names = (
+    "kNN",
+    "Linear SVM",
+    "RBF SVM",
+    "D. Tree",
+    "R. Forest",
+    "MLP",
+    "N. Bayes",
+    # "LSTM"
+)
 
-classifiers = [
-    # KNeighborsClassifier(math.floor(math.sqrt(config.inf_window_size))),
-    # SVC(kernel="linear"),
-    # SVC(),
-    # DecisionTreeClassifier(),
-    # RandomForestClassifier(),
-    # MLPClassifier(),
-    # GaussianNB(),
-    LSTMClassifier()
-]
+classifiers = (
+    KNeighborsClassifier(math.floor(math.sqrt(config.inf_window_size))),
+    SVC(kernel="linear"),
+    SVC(),
+    DecisionTreeClassifier(),
+    RandomForestClassifier(),
+    MLPClassifier(),
+    GaussianNB(),
+    # LSTMClassifier()
+)
 
 
 def plot_experiment_4bars(score_lit, score_inf_hcfs, score_name, ylim=(0.5, 1.05),
@@ -130,19 +138,19 @@ def plot_roc_auc_dict_4bars(roc_auc_lit, roc_auc_inf_hc_fs, ylim=(0.5, 1.05),
 
 
 def experiment_measure(window_size, k_fold, path, feature):
-    # def classifier_handle(score_dict, roc_auc_dict, precision_dict, recall_dict,
-    #                       clf, clf_name, X, y, k_fold):
-    #     t0 = time.time()
-    #     y_pred = cross_val_predict(clf, X, y, cv=k_fold)
-    #     tf = time.time()
-    #     # train_time_dict[clf_name] = train_time_dict.get(clf_name, []) + [ (tf - t0) / k_fold ]
-    #     fpr, tpr, threshold = metrics.roc_curve(y, y_pred)
-    #     roc_auc_dict[clf_name] = roc_auc_dict.get(clf_name, []) + [metrics.auc(fpr, tpr)]
-    #     score_dict[clf_name] = score_dict.get(clf_name, []) + [metrics.accuracy_score(y, y_pred)]
-    #     precision_dict[clf_name] = precision_dict.get(clf_name, []) + [metrics.precision_score(y, y_pred)]
-    #     recall_dict[clf_name] = recall_dict.get(clf_name, []) + [metrics.recall_score(y, y_pred)]
-    def classifier_handle(score_dict, roc_auc_dict, precision_dict, recall_dict, train_time_dict, pred_time_dict, 
-                          clf, clf_name, X, y, k_fold):
+    def classifier_handle(args_dict):
+        score_dict = args_dict['score_dict'] 
+        roc_auc_dict = args_dict['roc_auc_dict']
+        precision_dict = args_dict['precision_dict']
+        recall_dict = args_dict['recall_dict']
+        train_time_dict = args_dict['train_time_dict']
+        pred_time_dict = args_dict['pred_time_dict']
+        clf = args_dict['clf']
+        clf_name = args_dict['clf_name'] 
+        X = args_dict['X']
+        y = args_dict['y']
+        k_fold = args_dict['k_fold']
+
         # Criar a divisão dos folds usando KFold
         kf = KFold(n_splits=k_fold, shuffle=True, random_state=42)
         
@@ -199,17 +207,23 @@ def experiment_measure(window_size, k_fold, path, feature):
             df_arr += [_df[feature].dropna()]
             my_debug(csv_filename, df_arr[-1].shape)
             limit = min(limit, df_arr[-1].shape[0])
-        limit = 150
+        # limit = 150  # Utilizado para teste rápido, comentar para rodar o experimento completo
         my_debug('limit =', limit)
         for i, driver in enumerate('ABCD'):
             df_arr[i] = df_arr[i][:limit]
             df_arr[i][class_feat] = [driver] * df_arr[i].shape[0]
         # Split dataset into windows
         shift = window_size >> 1  # window_size // 2
-        sliding_window = [pd.concat(
-            [df_arr[0][j:j + window_size], df_arr[1][j:j + window_size],
-             df_arr[2][j:j + window_size], df_arr[3][j:j + window_size]
-             ]) for j in range(0, limit, shift)]
+        sliding_window = (
+            pd.concat(
+                (
+                    df_arr[0][j:j + window_size], 
+                    df_arr[1][j:j + window_size],
+                    df_arr[2][j:j + window_size], 
+                    df_arr[3][j:j + window_size]
+                )
+            ) for j in range(0, limit, shift)
+        )
         total_process = len(sliding_window) * len(classifier_names) * len('ABCD')
         my_debug('total_process =', total_process)
         counter = 0
@@ -223,11 +237,30 @@ def experiment_measure(window_size, k_fold, path, feature):
             for clf, clf_name in zip(classifiers, classifier_names):
                 running_process = []
                 for driver in 'ABCD':
-                    y = window[class_feat].replace(['A', 'B', 'C', 'D'],
-                                                   ['A' == driver, 'B' == driver, 'C' == driver, 'D' == driver])
-                    p = multiprocessing.Process(target=classifier_handle,
-                                                args=(score_dict, roc_auc_dict, precision_dict, recall_dict, train_time_dict, pred_time_dict,
-                                                      clf, clf_name, X, y, k_fold))
+                    y = window[class_feat].replace(
+                        ['A', 'B', 'C', 'D'],
+                        ['A' == driver, 'B' == driver, 'C' == driver, 'D' == driver]
+                    )
+                    p = multiprocessing.Process(
+                        target=classifier_handle,
+                        args=(
+                            {
+                                "score_dict": score_dict,
+                                "roc_auc_dict": roc_auc_dict,
+                                "precision_dict": precision_dict,
+                                "recall_dict": recall_dict,
+                                "train_time_dict": train_time_dict,
+                                "pred_time_dict": pred_time_dict,
+                                "clf": clf,
+                                "clf_name": clf_name,
+                                "X": X,
+                                "y": y,
+                                "k_fold": k_fold
+                            },
+                        )
+                    )
+                    p.start()
+                    running_process.append(p)
                     p.start()
                     running_process.append(p)
                 for p in running_process:
@@ -238,13 +271,17 @@ def experiment_measure(window_size, k_fold, path, feature):
     return score_dict.copy(), roc_auc_dict.copy(), precision_dict.copy(), recall_dict.copy()
 
 
-def experiment_controler(experiment_name, feature_inf_hc_fs):
+def experiment_controler(
+        experiment_name, 
+        feature_inf_hc_fs,
+        dataset_path
+    ):
     my_debug('Running', experiment_name)
-    directory_to_save = f'./results/experiment'
+    directory_to_save = './results/experiment'
 
     window_size = 120
     k_fold = 5
-    dataset_path = './datasets/ThisCarIsMineInf_window720_dx6'
+    # dataset_path = './datasets/ThisCarIsMineInf_window720_dx6'
     data_inf_hc_fs = experiment_measure(window_size, k_fold, dataset_path, feature_inf_hc_fs)
     data_lit = experiment_measure(window_size, k_fold, './datasets/ThisCarIsMineNormalized', config.feature_lit_remaining)
     if not os.path.exists(directory_to_save):
@@ -268,7 +305,23 @@ def experiment_controler(experiment_name, feature_inf_hc_fs):
 
 
 if __name__ == '__main__':
-    experiment_controler(
-        experiment_name='inf',
-        feature_inf_hc_fs=config.feature_inf_hcfs
-    )
+    for dataset_path, experiment_name, configuration in (
+        (
+            '../02-transformation/02.1-dataset-processed/multiprocessing/720/ThisCarIsMine',
+            'information',
+            config.feature_inf_hcfs
+        ),
+        (
+            '../02-transformation/02.1-dataset-processed/ThisCarIsMineNormalized', 
+            'literature',
+            config.feature_lit_remaining
+        )
+    ):
+        if not os.path.exists(dataset_path):
+            logger.error(f'Dataset not found in {dataset_path}, aborting experiment.', exc_info=True)
+        else:
+            experiment_controler(
+                experiment_name=experiment_name,
+                feature_inf_hc_fs=configuration,
+                dataset_path=dataset_path
+            )

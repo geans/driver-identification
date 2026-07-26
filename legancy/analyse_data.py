@@ -2,22 +2,23 @@ import json
 import math
 import multiprocessing
 import os
-# from datetime import timedelta
 
+import numpy as np
+
+# from datetime import timedelta
 import ordpy
 import pandas as pd
-import numpy as np
+import seaborn as sns
 from matplotlib import pyplot as plt
-from ordpy import minimum_complexity_entropy, maximum_complexity_entropy
+from ordpy import maximum_complexity_entropy, minimum_complexity_entropy
+from scipy.stats import sem
 from sklearn import metrics
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.feature_selection import mutual_info_classif
 from sklearn.metrics import accuracy_score
-from sklearn.model_selection import cross_validate, cross_val_score, cross_val_predict
+from sklearn.model_selection import cross_val_predict, cross_val_score, cross_validate
 from sklearn.svm import SVC
 from sklearn.tree import DecisionTreeClassifier
-from scipy.stats import sem
-import seaborn as sns
 
 import config
 
@@ -50,9 +51,9 @@ def preprocessing_to_hc(series):
     return series
 
 
-def plot_limits(hc_min, hc_max):
-    plt.plot(hc_min[0], hc_min[1], color="black", linewidth=0.8)
-    plt.plot(hc_max[0], hc_max[1], color="black", linewidth=0.8)
+# def plot_limits(hc_min, hc_max):
+#     plt.plot(hc_min[0], hc_min[1], color="black", linewidth=0.8)
+#     plt.plot(hc_max[0], hc_max[1], color="black", linewidth=0.8)
 
 
 def get_data_list(path='./datasets/ThisCarIsMine'):
@@ -488,19 +489,19 @@ def analyse_hc_parameters(directory_output):
         plt.savefig(directory_output + '/analyse_data__analyse_hc_parameters.png')
 
 
-def plot_c_limits(dx, path_to_save='.'):
-    hc_min, hc_max = hc_limits(dx)
-    #
-    font_size = 24
-    label_size = 26
-    fig_name = f'hc_plan__{dx}'
-    plt.figure(fig_name, figsize=(10, 8))
-    plot_limits(hc_min, hc_max)
-    plt.xlabel('Permutation entropy, $H$', fontsize=font_size)
-    plt.ylabel('Statistical complexity, $C$', fontsize=font_size)
-    plt.tick_params(axis='both', which='major', labelsize=label_size)
-    plt.subplots_adjust(bottom=.2)
-    plt.savefig(f'{path_to_save}/{fig_name}.png')
+# def plot_c_limits(dx, path_to_save='.'):
+#     hc_min, hc_max = hc_limits(dx)
+#     #
+#     font_size = 24
+#     label_size = 26
+#     fig_name = f'hc_plan__{dx}'
+#     plt.figure(fig_name, figsize=(10, 8))
+#     plot_limits(hc_min, hc_max)
+#     plt.xlabel('Permutation entropy, $H$', fontsize=font_size)
+#     plt.ylabel('Statistical complexity, $C$', fontsize=font_size)
+#     plt.tick_params(axis='both', which='major', labelsize=label_size)
+#     plt.subplots_adjust(bottom=.2)
+#     plt.savefig(f'{path_to_save}/{fig_name}.png')
 
 
 def analyse_nan():
@@ -808,125 +809,125 @@ def analyse_inf_feature_nan(features):
     return remaining, columns_with_nan
 
 
-def analyse_inf_plane(feature, path_to_save, plane, dx=7, split_series=False):
-    print(f'\n  # Information Plane: {feature}')
-    # data_dict = multiprocessing.Manager().dict(
-    #     {
-    #         'A': ([], [], [], []),  # Entropy, Complexity, Fisher, Shannon
-    #         'B': ([], [], [], []),
-    #         'C': ([], [], [], []),
-    #         'D': ([], [], [], [])
-    #     }
-    # )
-    #
-    # def information_measure(series, driver, feature):
-    #     if split_series:
-    #         series_list = split_data_to_window(series, 120, 60)
-    #     else:
-    #         series_list = [series]
-    #     h_list_local, c_list_local, f_list_local, s_list_local = [], [], [], []
-    #     for _series in series_list:
-    #         _series = preprocessing_to_hc(_series)
-    #         try:
-    #             if 'hc' in plane:
-    #                 h, c = ordpy.complexity_entropy(_series, dx=dx)
-    #                 h_list_local.append(h)
-    #                 c_list_local.append(c)
-    #             if 'fs' in plane:
-    #                 s, f = ordpy.fisher_shannon(_series, dx=dx)
-    #                 f_list_local.append(f)
-    #                 s_list_local.append(s)
-    #         except Exception as e:
-    #             print(f'Error in analyse_inf_plan::information_measure. '
-    #                   f'len(_series)={len(_series)}, dx={dx}, feature={feature}.', e)
-    #     h_list, c_list, f_list, s_list = data_dict[driver]
-    #     data_dict[driver] = (h_list+h_list_local, c_list+c_list_local, f_list+f_list_local, s_list+s_list_local)
-    #
-    # data_arr = get_data_list()
-    # process = []
-    # for data in data_arr:
-    #     p = multiprocessing.Process(target=information_measure,
-    #                                 args=(data[0][feature], data[1], feature))
-    #     p.start()
-    #     process.append(p)
-    # print('Number of processed files:', len(process))
-    # for p in process:
-    #     p.join()
-    # with open('data_dict.json', 'w') as file:
-    #     json.dump(dict(data_dict), file)
-    with open('data_dict.json', 'r') as file:
-        data_dict = json.load(file)
-    hc_min, hc_max = hc_limits(dx)
-    #
-    font_size = 24
-    legend_font_size = 18
-    label_size = 26
-    # index for dictionary
-    H, C, F, S = 0, 1, 2, 3  # Entropy, Complexity, Fisher, Shannon
-    #
-    if 'hc' in plane:
-        fig_name = f'hc_plan__{feature}'
-        plt.figure(fig_name, figsize=config.default_figsize)
-        for driver, marker in zip('ABCD', 'o^dv'):
-            h_list = data_dict[driver][H]
-            c_list = data_dict[driver][C]
-            limit = min(len(h_list), len(c_list))
-            plt.scatter(h_list[:limit], c_list[:limit], label=f'driver {driver}', s=100, marker=marker)
-        plot_limits(hc_min, hc_max)
-        plt.legend(fontsize=legend_font_size)
-        plt.xlabel('Permutation entropy, $H$', fontsize=font_size)
-        plt.ylabel('Statistical complexity, $C$', fontsize=font_size)
-        plt.tick_params(axis='both', which='major', labelsize=label_size)
-        plt.subplots_adjust(bottom=.2, left=.2)
-        plt.savefig(f'{path_to_save}/{fig_name}.png')
-        #
-        #
-        fig_name = f'hc_plan__{feature}__zoom'
-        plt.figure(fig_name, figsize=config.default_figsize)
-        for driver, marker in zip('ABCD', 'o^dv'):
-            h_list = data_dict[driver][H]
-            c_list = data_dict[driver][C]
-            limit = min(len(h_list), len(c_list))
-            plt.scatter(h_list[:limit], c_list[:limit], label=f'driver {driver}', s=100, marker=marker)
-        plt.legend(fontsize=legend_font_size)
-        plt.xlabel('Permutation entropy, $H$', fontsize=font_size)
-        plt.ylabel('Statistical complexity, $C$', fontsize=font_size)
-        plt.tick_params(axis='both', which='major', labelsize=label_size)
-        plt.subplots_adjust(bottom=.2, left=.2)
-        plt.savefig(f'{path_to_save}/{fig_name}.png')
-    #
-    if 'fs' in plane:
-        fig_name = f'fs_plan__{feature}'
-        plt.figure(fig_name, figsize=config.default_figsize)
-        for driver, marker in zip('ABCD', 'o^dv'):
-            f_list = data_dict[driver][F]
-            s_list = data_dict[driver][S]
-            limit = min(len(f_list), len(s_list))
-            plt.scatter(s_list[:limit], f_list[:limit], label=f'driver {driver}', s=100, marker=marker)
-        plt.legend(fontsize=legend_font_size)
-        plt.ylim((0, 1))
-        plt.xlim((0, 1))
-        plt.xlabel('Shannon entropy, $S$', fontsize=font_size)
-        plt.ylabel('Fisher entropy, $F$', fontsize=font_size)
-        plt.tick_params(axis='both', which='major', labelsize=label_size)
-        plt.subplots_adjust(bottom=.2, left=.2)
-        plt.savefig(f'{path_to_save}/{fig_name}.png')
-        #
-        #
-        fig_name = f'fs_plan__{feature}__zoom'
-        plt.figure(fig_name, figsize=config.default_figsize)
-        for driver, marker in zip('ABCD', 'o^dv'):
-            f_list = data_dict[driver][F]
-            s_list = data_dict[driver][S]
-            limit = min(len(f_list), len(s_list))
-            plt.scatter(s_list[:limit], f_list[:limit], label=f'driver {driver}', s=100, marker=marker)
-        plt.legend(fontsize=legend_font_size)
-        plt.xlabel('Shannon entropy, $S$', fontsize=font_size)
-        plt.ylabel('Fisher entropy, $F$', fontsize=font_size)
-        plt.tick_params(axis='both', which='major', labelsize=label_size)
-        plt.subplots_adjust(bottom=.2, left=.2)
-        plt.savefig(f'{path_to_save}/{fig_name}.png')
-    return data_dict
+# def analyse_inf_plane(feature, path_to_save, plane, dx=7, split_series=False):
+#     print(f'\n  # Information Plane: {feature}')
+#     # data_dict = multiprocessing.Manager().dict(
+#     #     {
+#     #         'A': ([], [], [], []),  # Entropy, Complexity, Fisher, Shannon
+#     #         'B': ([], [], [], []),
+#     #         'C': ([], [], [], []),
+#     #         'D': ([], [], [], [])
+#     #     }
+#     # )
+#     #
+#     # def information_measure(series, driver, feature):
+#     #     if split_series:
+#     #         series_list = split_data_to_window(series, 120, 60)
+#     #     else:
+#     #         series_list = [series]
+#     #     h_list_local, c_list_local, f_list_local, s_list_local = [], [], [], []
+#     #     for _series in series_list:
+#     #         _series = preprocessing_to_hc(_series)
+#     #         try:
+#     #             if 'hc' in plane:
+#     #                 h, c = ordpy.complexity_entropy(_series, dx=dx)
+#     #                 h_list_local.append(h)
+#     #                 c_list_local.append(c)
+#     #             if 'fs' in plane:
+#     #                 s, f = ordpy.fisher_shannon(_series, dx=dx)
+#     #                 f_list_local.append(f)
+#     #                 s_list_local.append(s)
+#     #         except Exception as e:
+#     #             print(f'Error in analyse_inf_plan::information_measure. '
+#     #                   f'len(_series)={len(_series)}, dx={dx}, feature={feature}.', e)
+#     #     h_list, c_list, f_list, s_list = data_dict[driver]
+#     #     data_dict[driver] = (h_list+h_list_local, c_list+c_list_local, f_list+f_list_local, s_list+s_list_local)
+#     #
+#     # data_arr = get_data_list()
+#     # process = []
+#     # for data in data_arr:
+#     #     p = multiprocessing.Process(target=information_measure,
+#     #                                 args=(data[0][feature], data[1], feature))
+#     #     p.start()
+#     #     process.append(p)
+#     # print('Number of processed files:', len(process))
+#     # for p in process:
+#     #     p.join()
+#     # with open('data_dict.json', 'w') as file:
+#     #     json.dump(dict(data_dict), file)
+#     with open('data_dict.json', 'r') as file:
+#         data_dict = json.load(file)
+#     hc_min, hc_max = hc_limits(dx)
+#     #
+#     font_size = 24
+#     legend_font_size = 18
+#     label_size = 26
+#     # index for dictionary
+#     H, C, F, S = 0, 1, 2, 3  # Entropy, Complexity, Fisher, Shannon
+#     #
+#     if 'hc' in plane:
+#         fig_name = f'hc_plan__{feature}'
+#         plt.figure(fig_name, figsize=config.default_figsize)
+#         for driver, marker in zip('ABCD', 'o^dv'):
+#             h_list = data_dict[driver][H]
+#             c_list = data_dict[driver][C]
+#             limit = min(len(h_list), len(c_list))
+#             plt.scatter(h_list[:limit], c_list[:limit], label=f'driver {driver}', s=100, marker=marker)
+#         plot_limits(hc_min, hc_max)
+#         plt.legend(fontsize=legend_font_size)
+#         plt.xlabel('Permutation entropy, $H$', fontsize=font_size)
+#         plt.ylabel('Statistical complexity, $C$', fontsize=font_size)
+#         plt.tick_params(axis='both', which='major', labelsize=label_size)
+#         plt.subplots_adjust(bottom=.2, left=.2)
+#         plt.savefig(f'{path_to_save}/{fig_name}.png')
+#         #
+#         #
+#         fig_name = f'hc_plan__{feature}__zoom'
+#         plt.figure(fig_name, figsize=config.default_figsize)
+#         for driver, marker in zip('ABCD', 'o^dv'):
+#             h_list = data_dict[driver][H]
+#             c_list = data_dict[driver][C]
+#             limit = min(len(h_list), len(c_list))
+#             plt.scatter(h_list[:limit], c_list[:limit], label=f'driver {driver}', s=100, marker=marker)
+#         plt.legend(fontsize=legend_font_size)
+#         plt.xlabel('Permutation entropy, $H$', fontsize=font_size)
+#         plt.ylabel('Statistical complexity, $C$', fontsize=font_size)
+#         plt.tick_params(axis='both', which='major', labelsize=label_size)
+#         plt.subplots_adjust(bottom=.2, left=.2)
+#         plt.savefig(f'{path_to_save}/{fig_name}.png')
+#     #
+#     if 'fs' in plane:
+#         fig_name = f'fs_plan__{feature}'
+#         plt.figure(fig_name, figsize=config.default_figsize)
+#         for driver, marker in zip('ABCD', 'o^dv'):
+#             f_list = data_dict[driver][F]
+#             s_list = data_dict[driver][S]
+#             limit = min(len(f_list), len(s_list))
+#             plt.scatter(s_list[:limit], f_list[:limit], label=f'driver {driver}', s=100, marker=marker)
+#         plt.legend(fontsize=legend_font_size)
+#         plt.ylim((0, 1))
+#         plt.xlim((0, 1))
+#         plt.xlabel('Shannon entropy, $S$', fontsize=font_size)
+#         plt.ylabel('Fisher entropy, $F$', fontsize=font_size)
+#         plt.tick_params(axis='both', which='major', labelsize=label_size)
+#         plt.subplots_adjust(bottom=.2, left=.2)
+#         plt.savefig(f'{path_to_save}/{fig_name}.png')
+#         #
+#         #
+#         fig_name = f'fs_plan__{feature}__zoom'
+#         plt.figure(fig_name, figsize=config.default_figsize)
+#         for driver, marker in zip('ABCD', 'o^dv'):
+#             f_list = data_dict[driver][F]
+#             s_list = data_dict[driver][S]
+#             limit = min(len(f_list), len(s_list))
+#             plt.scatter(s_list[:limit], f_list[:limit], label=f'driver {driver}', s=100, marker=marker)
+#         plt.legend(fontsize=legend_font_size)
+#         plt.xlabel('Shannon entropy, $S$', fontsize=font_size)
+#         plt.ylabel('Fisher entropy, $F$', fontsize=font_size)
+#         plt.tick_params(axis='both', which='major', labelsize=label_size)
+#         plt.subplots_adjust(bottom=.2, left=.2)
+#         plt.savefig(f'{path_to_save}/{fig_name}.png')
+#     return data_dict
 
 
 if __name__ == '__main__':
@@ -961,7 +962,7 @@ if __name__ == '__main__':
     # print('[!] Features inf NaN:', len(exc), exc)
     # print('[!] Features remaining:', len(inc), inc)
 
-    # INF THEORY PLAN
+    # # INF THEORY PLAN
     # dx = 7
     # path_to_save = 'results/inf_plane'
     # for feature in [
