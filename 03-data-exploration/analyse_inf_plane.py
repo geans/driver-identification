@@ -4,14 +4,14 @@ import math
 import multiprocessing
 import os
 
+import config
+
 # from datetime import timedelta
 import ordpy
 import utils
 from matplotlib import pyplot as plt
 from mpl_toolkits.axes_grid1.inset_locator import mark_inset
 from ordpy import maximum_complexity_entropy, minimum_complexity_entropy
-
-import config
 
 logging.basicConfig(
     level=logging.INFO, 
